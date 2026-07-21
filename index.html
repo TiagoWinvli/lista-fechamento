@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fechamento — Calçados</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper: #f2ede2;
+  --paper-2: #e9e1d0;
+  --ink: #211d18;
+  --ink-soft: #5c5346;
+  --line: #d8cdb6;
+  --card: #fffdf8;
+
+  --c-basq: #33459c;
+  --c-basq-soft: #e4e7f7;
+  --c-bota: #7a4a26;
+  --c-bota-soft: #f0e2d2;
+  --c-plat: #9c7300;
+  --c-plat-soft: #f7edcf;
+  --total-bg: #ece3fa;
+  --total-text: #5a3d99;
+
+  --danger: #b3402f;
+  --fechamento: #d9720c;
+}
+
+body.dark-mode {
+  --paper: #121212;
+  --paper-2: #1e1e1e;
+  --ink: #f0f0f0;
+  --ink-soft: #a0a0a0;
+  --line: #333333;
+  --card: #181818;
+
+  --c-basq: #889cf5;
+  --c-basq-soft: #1a2240;
+  --c-bota: #d99a6c;
+  --c-bota-soft: #382212;
+  --c-plat: #ffcc33;
+  --c-plat-soft: #4d3a00;
+  --total-bg: #322a47;
+  --total-text: #cbb6f5;
+  --fechamento: #ffa733;
+}
+
+*{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
+html,body{margin:0;padding:0; overflow-x:hidden; width:100%;}
+body{
+  background: var(--paper);
+  background-image: linear-gradient(var(--paper-2) 1px, transparent 1px);
+  background-size: 100% 34px;
+  color: var(--ink);
+  font-family:'Space Grotesk', system-ui, sans-serif;
+  font-size: 16px;
+  min-height:100vh;
+  padding-bottom: 96px;
+  transition: background-color 0.3s, color 0.3s;
+}
+::selection{ background: var(--c-basq); color:#fff;}
+
+header{
+  background: var(--paper);
+  border-bottom: 2px solid var(--ink);
+  padding: 16px 18px 12px;
+}
+.title-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
+.brand{ display:flex; align-items:center; gap:10px; min-width:0;}
+.stamp{
+  font-family:'Bebas Neue', sans-serif;
+  border: 2.5px solid var(--ink);
+  border-radius: 4px;
+  padding: 3px 9px 1px;
+  font-size: 15px;
+  letter-spacing: 1px;
+  transform: rotate(-3deg);
+  line-height:1;
+}
+h1{ font-size: 21px; margin:0; font-weight:700; letter-spacing:-.2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.h-sub{ font-size:13px; color:var(--ink-soft); font-family:'JetBrains Mono',monospace; margin-top:1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.count-pill{
+  font-family:'JetBrains Mono', monospace;
+  font-size:13.5px; font-weight:600;
+  background: var(--ink); color: var(--paper);
+  border-radius: 20px; padding: 6px 13px;
+  white-space:nowrap; flex-shrink:0;
+}
+@media(max-width:380px){
+  .count-pill{ font-size:11.5px; padding:5px 10px; }
+  h1{ font-size:18px; }
+}
+.searchbar{ margin-top:12px; position:relative;}
+.searchbar input{
+  width:100%; background: var(--card); border:1.5px solid var(--line);
+  border-radius: 10px; padding: 12px 14px 12px 38px;
+  font-family:'JetBrains Mono', monospace; font-size:16px; color:var(--ink);
+  outline:none;
+}
+.searchbar input:focus{ border-color: var(--ink);}
+.searchbar svg{ position:absolute; left:11px; top:50%; transform:translateY(-50%); opacity:.45;}
+
+nav.tabs{
+  position: fixed; left:0; right:0; bottom:0; z-index:30;
+  background: var(--card);
+  border-top: 2px solid var(--ink);
+  display:flex;
+  padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
+  gap:4px;
+}
+nav.tabs button{
+  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
+  background:transparent; border:none; padding:8px 4px 6px; border-radius:10px;
+  font-family:'Space Grotesk', sans-serif; font-size:13px; font-weight:600;
+  color: var(--ink-soft); cursor:pointer;
+}
+nav.tabs button.active{ background: var(--paper-2); color: var(--ink);}
+nav.tabs button .dot{ width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13.5px;}
+nav.tabs button[data-cat="basquete"] .dot{ background: var(--c-basq-soft); color:var(--c-basq);}
+nav.tabs button[data-cat="bota"] .dot{ background: var(--c-bota-soft); color:var(--c-bota);}
+nav.tabs button[data-cat="plataforma"] .dot{ background: var(--c-plat-soft); color:var(--c-plat);}
+nav.tabs button[data-cat="todos"] .dot{ background: var(--paper-2); color:var(--ink);}
+
+main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hidden;}
+.grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; transition: opacity .16s ease, transform .16s ease;}
+.grid.swiping{ opacity:0; }
+.grid.swiping.from-right{ transform: translateX(18px); }
+.grid.swiping.from-left{ transform: translateX(-18px); }
+@media(min-width:640px){ .grid{grid-template-columns: repeat(4,1fr); gap:12px;} }
+@media(min-width:900px){ .grid{grid-template-columns: repeat(5,1fr); gap:12px;} }
+.card{ grid-column: span 1;}
+
+.card{
+  background: var(--card);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  position:relative;
+  display:flex; flex-direction:column;
+  transition: transform .1s, border-color .2s;
+}
+.card.fechamento{ border: 2px solid var(--fechamento); box-shadow: 0 0 8px rgba(217, 114, 12, 0.3); }
+.card:active{ transform: scale(.98);}
+.photo{
+  aspect-ratio: 1/1; width:100%;
+  background: var(--paper-2);
+  display:flex; align-items:center; justify-content:center;
+  position:relative; overflow:hidden;
+}
+.photo img{ width:100%; height:100%; object-fit:cover;}
+.photo .ph-icon{ opacity:.28;}
+.cat-tag{
+  position:absolute; top:8px; left:8px;
+  font-family:'Bebas Neue', sans-serif; font-size:11px; letter-spacing:.5px;
+  border-radius:4px; padding:2px 7px 1px; border:1.5px solid currentColor;
+  background: var(--card); z-index: 2;
+}
+.cat-tag.basquete{ color: var(--c-basq);}
+.cat-tag.bota{ color: var(--c-bota);}
+.cat-tag.plataforma{ color: var(--c-plat);}
+.fechamento-badge {
+  position:absolute; top:8px; right:8px; font-size: 16px; z-index: 2; display: none;
+}
+.card.fechamento .fechamento-badge { display: block; text-shadow: 0 0 4px rgba(0,0,0,0.5); }
+
+.card-body{ padding:10px 11px 11px; display:flex; flex-direction:column; gap:3px; flex:1;}
+.codigo{ font-family:'JetBrains Mono', monospace; font-weight:700; font-size:16px; letter-spacing:-.2px;}
+.cor{ font-size:13.5px; color: var(--ink-soft); line-height:1.3; min-height:17px;}
+.total-chip{
+  font-family:'JetBrains Mono', monospace; font-size:12.5px; font-weight:700;
+  color: var(--total-text); background: var(--total-bg); border-radius:20px; padding:4px 10px;
+  white-space:nowrap; flex-shrink:0;
+}
+.sizes-head{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:5px; gap:6px; flex-wrap:wrap;}
+.sizes-head span:first-child{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.sizes-head span{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color: var(--ink-soft); font-weight:600;}
+.size-list{ display:flex; flex-wrap:wrap; gap:6px; flex:1;}
+.size-chip{
+  display:flex; align-items:center; gap:6px;
+  font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:600;
+  background: var(--paper-2); border-radius:7px; padding:5px 5px 5px 10px;
+  cursor:pointer; color: var(--ink);
+}
+.size-chip:hover{ background: var(--line);}
+.size-chip .x{
+  width:18px; height:18px; border-radius:50%; background: var(--card);
+  display:flex; align-items:center; justify-content:center; font-size:12px; color: var(--danger);
+  line-height:1;
+}
+.size-chip .x:hover{ background: var(--danger); color:#fff;}
+.size-chip .check{
+  width:18px; height:18px; border-radius:50%; background: var(--card);
+  display:flex; align-items:center; justify-content:center; font-size:11px; color: var(--ink-soft);
+  line-height:1; border:1.5px solid var(--line);
+}
+.size-chip .check:hover{ border-color: var(--ink); color: var(--ink); }
+.size-chip.done{ opacity:.6; }
+.size-chip.done .check{ background: #2f9e44; border-color:#2f9e44; color:#fff; }
+.size-chip.done > span:first-of-type, .size-chip.done{ text-decoration: line-through; text-decoration-color: var(--ink-soft); }
+.add-size-chip{
+  display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono', monospace; font-size:15px; font-weight:700;
+  background: transparent; border: 1.5px dashed var(--line); border-radius:7px;
+  padding:5px 11px; cursor:pointer; color: var(--ink-soft);
+}
+.add-size-chip:hover{ border-color: var(--ink); color: var(--ink);}
+.card-actions{ display:flex; border-top:1.5px solid var(--line); }
+.card-actions button{
+  flex:1; background:transparent; border:none; padding:10px 4px;
+  font-family:'Space Grotesk',sans-serif; font-size:13.5px; font-weight:600;
+  color: var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;
+}
+.card-actions button.fechar-btn { color: var(--ink-soft); font-size: 14px;}
+.card.fechamento .card-actions button.fechar-btn { color: var(--fechamento); }
+.card-actions button:not(:last-child){ border-right:1.5px solid var(--line);}
+.card-actions button.del{ color: var(--danger);}
+.card-actions button:hover{ background: var(--paper-2);}
+
+.empty{ grid-column: 1/-1; text-align:center; padding: 60px 20px; color: var(--ink-soft); font-family:'JetBrains Mono',monospace; font-size:14.5px; }
+
+.ph-icon{ font-size:38px; }
+
+@media(max-width:640px){
+  .card{ border-radius:12px; }
+  .card-body{ padding:8px 8px 9px; gap:3px; }
+  .codigo{ font-size:13.5px; line-height:1.2; word-break:break-all; }
+  .cor{ font-size:11px; min-height:0; line-height:1.25; }
+  .total-chip{ font-size:10.5px; padding:3px 7px; }
+  .sizes-head{ margin-top:6px; margin-bottom:4px; }
+  .sizes-head span{ font-size:9.5px; }
+  .size-list{ gap:4px; }
+  .size-chip{ font-size:12px; padding:4px 4px 4px 7px; gap:4px; border-radius:6px; }
+  .size-chip .x{ width:15px; height:15px; font-size:10px; }
+  .add-size-chip{ font-size:13px; padding:4px 8px; border-radius:6px; }
+  .cat-tag{ font-size:9.5px; padding:1.5px 6px 0; top:6px; left:6px; }
+  .fechamento-badge{ font-size:13px; top:6px; right:6px; }
+  .ph-icon{ font-size:30px; }
+  .ph-icon svg{ width:30px; height:30px; }
+  .card-actions button{ padding:9px 3px; font-size:14px; }
+  .card-actions .btn-label{ display:none; }
+}
+
+.fab{
+  position: fixed; right:18px; bottom: 84px; z-index:25;
+  width:56px; height:56px; border-radius:50%;
+  background: var(--ink); color: var(--paper);
+  border:none; font-size:28px; line-height:1;
+  display:flex; align-items:center; justify-content:center;
+  box-shadow: 0 8px 20px rgba(0,0,0,.35);
+  cursor:pointer;
+}
+.fab:active{ transform: scale(.94);}
+
+.overlay{
+  position:fixed; top:0; left:0; right:0; height:100vh; background: rgba(0,0,0,.65);
+  display:none; align-items:flex-end; justify-content:center; z-index:50;
+}
+.overlay.show{ display:flex;}
+.sheet{
+  background: var(--paper); width:100%; max-width: 480px;
+  border-radius: 20px 20px 0 0; padding: 18px 18px calc(18px + env(safe-area-inset-bottom));
+  max-height: 82vh; overflow-y:auto;
+  animation: slideup .22s ease;
+}
+@keyframes slideup{ from{ transform:translateY(30px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+.sheet-handle{ width:38px; height:4px; background: var(--line); border-radius:4px; margin: 0 auto 14px;}
+.sheet h2{ margin:0 0 14px; font-size:19px;}
+.field{ margin-bottom:14px;}
+.field label{ display:block; font-size:12.5px; text-transform:uppercase; letter-spacing:.06em; color: var(--ink-soft); margin-bottom:6px; font-weight:600;}
+.field input[type=text], .field input[type=number], .field select{
+  width:100%; background: var(--card); border:1.5px solid var(--line); border-radius:9px;
+  padding: 12px 13px; font-family:'Space Grotesk',sans-serif; font-size:16px; color: var(--ink); outline:none;
+}
+.field input:focus, .field select:focus{ border-color: var(--ink);}
+.field-checkbox { display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--ink); font-weight: 600; font-size: 15px;}
+.field-checkbox input { width: 20px; height: 20px; cursor: pointer; accent-color: var(--fechamento);}
+.cat-choice{ display:flex; gap:8px;}
+.catalog-wrap{ position:relative; }
+.catalog-wrap input{
+  width:100%; background: var(--card); border:1.5px solid var(--line); border-radius:9px;
+  padding: 12px 13px; font-family:'Space Grotesk',sans-serif; font-size:16px; color: var(--ink); outline:none;
+}
+.catalog-wrap input:focus{ border-color: var(--ink);}
+.catalog-results{
+  position:absolute; left:0; right:0; top:calc(100% + 4px); z-index:5;
+  background: var(--card); border:1.5px solid var(--line); border-radius:10px;
+  max-height:240px; overflow-y:auto; display:none; box-shadow:0 8px 18px rgba(0,0,0,.18);
+}
+.catalog-results.show{ display:block; }
+.catalog-item{
+  display:flex; align-items:center; gap:10px; padding:8px 10px; cursor:pointer;
+  border-bottom:1px solid var(--line);
+}
+.catalog-item:last-child{ border-bottom:none; }
+.catalog-item:hover, .catalog-item:active{ background: var(--paper-2); }
+.catalog-item .thumb{
+  width:38px; height:38px; border-radius:7px; background: var(--paper-2); flex:0 0 38px;
+  display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:18px;
+}
+.catalog-item .thumb img{ width:100%; height:100%; object-fit:cover; }
+.catalog-item .info{ min-width:0; flex:1; }
+.catalog-item .info .cod{ font-family:'JetBrains Mono',monospace; font-weight:700; font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.catalog-item .info .c{ font-size:12px; color: var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+.catalog-empty{ padding:12px 10px; font-size:13px; color: var(--ink-soft); font-family:'JetBrains Mono',monospace;}
+.catalog-item.stock-row{ cursor:default; }
+.catalog-item.stock-row:hover, .catalog-item.stock-row:active{ background: transparent; }
+.stock-row .stock-actions{ display:flex; gap:6px; flex-shrink:0; }
+.stock-row .stock-actions .mini-btn{ flex:none; padding:8px 10px; }
+.cat-choice button{
+  flex:1; padding:11px 6px; border-radius:9px; border:1.5px solid var(--line);
+  background: var(--card); font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;
+  color: var(--ink-soft); cursor:pointer;
+}
+.cat-choice button.sel[data-cat="basquete"]{ background: var(--c-basq-soft); border-color: var(--c-basq); color: var(--c-basq);}
+.cat-choice button.sel[data-cat="bota"]{ background: var(--c-bota-soft); border-color: var(--c-bota); color: var(--c-bota);}
+.cat-choice button.sel[data-cat="plataforma"]{ background: var(--c-plat-soft); border-color: var(--c-plat); color: var(--c-plat);}
+.cat-choice button.sel[data-cat="todos"]{ background: var(--paper-2); border-color: var(--ink); color: var(--ink);}
+.cat-choice.compact button{ padding:8px 4px; font-size:12.5px; }
+.cat-icon{ vertical-align:-3px; margin-right:4px; }
+.photo-input{
+  border: 1.5px dashed var(--line); border-radius: 10px; padding: 14px; text-align:center;
+  cursor:pointer; position:relative; background: var(--card);
+}
+.photo-input img{ max-width:100%; max-height:120px; border-radius:8px; margin-bottom:6px;}
+.photo-input span{ display:block; font-size:12px; color: var(--ink-soft);}
+.photo-input input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer;}
+.field-row{ display:flex; gap:10px;}
+.field-row .field{ flex:1;}
+.sheet-actions{ display:flex; gap:10px; margin-top:6px;}
+.btn{
+  flex:1; border:none; border-radius:10px; padding:14px; font-family:'Space Grotesk',sans-serif;
+  font-weight:700; font-size:16px; cursor:pointer;
+}
+.btn-primary{ background: var(--ink); color: var(--paper);}
+.btn-secondary{ background: var(--card); color: var(--ink-soft); border:1.5px solid var(--line);}
+
+.topbar-actions{ display:flex; gap:8px; margin-top:10px;}
+.mini-btn{
+  flex:1; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600;
+  background: var(--card); border:1.5px solid var(--line); border-radius:8px; padding:9px 6px; cursor:pointer;
+  color: var(--ink-soft);
+}
+.mini-btn.icon-btn { flex: 0 0 40px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.mini-btn:hover{ border-color: var(--ink); color: var(--ink);}
+
+#toast{
+  position:fixed; bottom: 92px; left:50%; transform: translateX(-50%) translateY(140%);
+  background: var(--ink); color: var(--paper); padding: 11px 19px; border-radius: 30px;
+  font-family:'JetBrains Mono',monospace; font-size:14px; z-index:15;
+  transition: transform .25s ease;
+  max-width: 88vw; text-align:center;
+  display:flex; align-items:center; justify-content:center; gap:12px;
+}
+#toast.show{ transform: translateX(-50%) translateY(0);}
+.toast-undo-btn{
+  background: var(--paper); color: var(--ink); border:none; border-radius:20px;
+  padding:6px 14px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
+  cursor:pointer; flex-shrink:0; white-space:nowrap;
+}
+
+.photo{ cursor:pointer; }
+.photo .zoom-hint{
+  position:absolute; bottom:6px; right:6px; z-index:2;
+  background: rgba(0,0,0,.5); color:#fff; border-radius:50%;
+  width:20px; height:20px; display:flex; align-items:center; justify-content:center;
+  font-size:11px; pointer-events:none;
+}
+@media(max-width:640px){ .photo .zoom-hint{ width:16px; height:16px; font-size:9px; bottom:4px; right:4px;} }
+
+.lightbox{
+  position:fixed; inset:0; z-index:60; background: rgba(0,0,0,.92);
+  display:none; align-items:center; justify-content:center; padding:20px;
+}
+.lightbox.show{ display:flex; }
+.lightbox img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <div class="brand">
+      <div class="stamp" id="stampLabel">TODOS</div>
+      <div>
+        <h1>Fechamento</h1>
+        <div class="h-sub" id="hSub">calçados a adquirir</div>
+      </div>
+    </div>
+    <div class="count-pill" id="countPill">0 itens</div>
+  </div>
+  <div class="searchbar">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Buscar por código ou cor...">
+  </div>
+  <div class="topbar-actions">
+    <button class="mini-btn icon-btn" id="themeToggle">🌓</button>
+    <button class="mini-btn icon-btn" id="refreshBtn">🔄</button>
+    <button class="mini-btn" id="stockBtn">📦 Estoque</button>
+    <button class="mini-btn" id="exportBtn">⬇ Exportar</button>
+    <button class="mini-btn" id="importBtn">⬆ Importar</button>
+    <input type="file" id="importFile" accept=".json" style="display:none">
+  </div>
+  <div id="shareNotice" style="margin-top:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--ink-soft); text-align:center;">
+  </div>
+</header>
+
+<main>
+  <div class="grid" id="grid"></div>
+</main>
+
+<button class="fab" id="fabAdd" aria-label="Adicionar sapato">+</button>
+
+<nav class="tabs">
+  <button data-cat="todos" class="active"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>Todos</button>
+  <button data-cat="basquete"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg></span>Basquete</button>
+  <button data-cat="bota"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg></span>Bota</button>
+  <button data-cat="plataforma"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg></span>Plataforma</button>
+</nav>
+
+<div class="overlay" id="overlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="formTitle">Adicionar sapato</h2>
+    <form id="itemForm">
+      <input type="hidden" id="editId">
+      <div class="field" id="catalogField">
+        <label>Já tem esse sapato cadastrado?</label>
+        <div class="catalog-wrap">
+          <input type="text" id="catalogSearch" autocomplete="off" placeholder="Buscar por código ou cor...">
+          <div class="catalog-results" id="catalogResults"></div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Categoria</label>
+        <div class="cat-choice" id="catChoice">
+          <button type="button" data-cat="basquete"><svg class="cat-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg> Basquete</button>
+          <button type="button" data-cat="bota"><svg class="cat-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg> Bota</button>
+          <button type="button" data-cat="plataforma"><svg class="cat-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg> Plataforma</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Foto</label>
+        <label class="photo-input" id="photoLabel">
+          <img id="photoPreview" style="display:none;">
+          <span id="photoText">Toque para escolher uma foto</span>
+          <input type="file" accept="image/*" id="photoFile">
+        </label>
+      </div>
+      <div class="field">
+        <label>Código</label>
+        <input type="text" id="fCodigo" placeholder="ex: CT00010007" required>
+      </div>
+      <div class="field">
+        <label>Cor</label>
+        <input type="text" id="fCor" placeholder="ex: Preto/Vermelho">
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Numeração</label>
+          <input type="number" id="fNum" placeholder="ex: 38">
+        </div>
+        <div class="field">
+          <label>Quantidade que preciso</label>
+          <input type="number" id="fQtd" min="0" placeholder="ex: 1">
+        </div>
+      </div>
+      <div class="field" style="margin-top: 10px; margin-bottom: 20px;">
+        <label class="field-checkbox">
+          <input type="checkbox" id="fFechamento">
+          Marcar como Fechamento ⚠️
+        </label>
+      </div>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-secondary" id="cancelBtn">Cancelar</button>
+        <button type="submit" class="btn btn-primary" id="saveBtn">Salvar</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="overlay" id="stockOverlay">
+  <div class="sheet" style="max-height:88vh;">
+    <div class="sheet-handle"></div>
+    <h2>📦 Estoque cadastrado</h2>
+    <div class="cat-choice compact" id="stockCatFilter" style="margin-bottom:10px;">
+      <button type="button" class="sel" data-cat="todos">Todos</button>
+      <button type="button" data-cat="basquete"><svg class="cat-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg> Basq.</button>
+      <button type="button" data-cat="bota"><svg class="cat-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg> Bota</button>
+      <button type="button" data-cat="plataforma"><svg class="cat-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg> Plat.</button>
+    </div>
+    <div class="field catalog-wrap">
+      <input type="text" id="stockSearch" autocomplete="off" placeholder="Buscar por código ou cor...">
+    </div>
+    <div id="stockList" style="margin-top:10px; max-height:52vh; overflow-y:auto; border:1.5px solid var(--line); border-radius:10px;"></div>
+    <div class="sheet-actions" style="margin-top:14px;">
+      <button type="button" class="btn btn-secondary" id="stockCloseBtn">Fechar</button>
+      <button type="button" class="btn btn-primary" id="stockAddNewBtn">+ Novo no estoque</button>
+    </div>
+  </div>
+</div>
+
+<div id="lightbox" class="lightbox">
+  <img id="lightboxImg" src="" alt="">
+</div>
+
+<div id="toast"></div>
+
+<script>
+let DATA = [];
+let nextId = 1;
+let currentCat = 'todos';
+let editingId = null;
+let photoDataUrl = "";
+
+if(localStorage.getItem('theme') === 'dark'){
+  document.body.classList.add('dark-mode');
+}
+document.getElementById('themeToggle').addEventListener('click', () => {
+  document.body.classList.toggle('dark-mode');
+  localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+});
+
+const initialData = [{"id": 1, "categoria": "basquete", "codigo": "CT00010007", "cor": "Preto/Vermelho", "numeracao": 41, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 2, "categoria": "basquete", "codigo": "CT35240002", "cor": "Vinho/Preto/Branco", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 3, "categoria": "basquete", "codigo": "CT34120004", "cor": "Terra Molhada Preto/Branco", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 4, "categoria": "basquete", "codigo": "CT04200003", "cor": "Verde Oliva Preto/Branco", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 5, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 6, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 7, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 8, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 35, "quantidade": 5, "foto": "", "fechamento": false}, {"id": 9, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 36, "quantidade": 3, "foto": "", "fechamento": false}, {"id": 10, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 37, "quantidade": 4, "foto": "", "fechamento": false}, {"id": 11, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 38, "quantidade": 8, "foto": "", "fechamento": false}, {"id": 12, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 39, "quantidade": 3, "foto": "", "fechamento": false}, {"id": 13, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 40, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 14, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 41, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 15, "categoria": "basquete", "codigo": "CT33510003", "cor": "Café com Leite/Amêndoa", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 16, "categoria": "basquete", "codigo": "CT33510003", "cor": "Café com Leite/Amêndoa", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 17, "categoria": "basquete", "codigo": "CT35060003", "cor": "Marrom Ferrugem/Marfim", "numeracao": 33, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 18, "categoria": "basquete", "codigo": "CT35060003", "cor": "Marrom Ferrugem/Marfim", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 19, "categoria": "basquete", "codigo": "CT35060004", "cor": "Ouro Enferrujado", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 20, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 21, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 22, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 38, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 23, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 24, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 36, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 25, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 26, "categoria": "bota", "codigo": "CK16050002", "cor": "Rosa Creme/Ouro Claro", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 27, "categoria": "bota", "codigo": "CT34990001", "cor": "Castanha Clara/Ouro Claro", "numeracao": 36, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 28, "categoria": "bota", "codigo": "CT04510001", "cor": "Branco/Vermelho", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 29, "categoria": "bota", "codigo": "CT04510001", "cor": "Branco/Vermelho", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 30, "categoria": "plataforma", "codigo": "CT34900002", "cor": "Branco/Ouro Claro", "numeracao": 36, "quantidade": 3, "foto": "", "fechamento": false}];
+
+let CATALOG = [];
+let storageReady = false;
+
+function catalogKey(categoria, codigo){
+  return (categoria||'') + '|' + (codigo||'').trim().toUpperCase();
+}
+
+function hasSharedStorage(){
+  return typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function';
+}
+
+// Guarda tudo em armazenamento COMPARTILHADO (quando o app está aberto pelo
+// link publicado do Claude). Se estiver aberto como arquivo baixado, esse
+// recurso não existe — nesse caso, guarda só neste navegador (localStorage),
+// pra não travar o app com erro.
+async function persistShoes(){
+  try{
+    if(hasSharedStorage()){
+      await window.storage.set('shoes-data', JSON.stringify(DATA), true);
+    } else {
+      localStorage.setItem('shoes-data-local', JSON.stringify(DATA));
+    }
+  } catch(err){
+    toast('Erro ao salvar: ' + err.message);
+  }
+}
+
+async function persistCatalog(){
+  try{
+    if(hasSharedStorage()){
+      await window.storage.set('catalog-data', JSON.stringify(CATALOG), true);
+    } else {
+      localStorage.setItem('catalog-data-local', JSON.stringify(CATALOG));
+    }
+  } catch(err){
+    toast('Erro ao salvar no estoque: ' + err.message);
+  }
+}
+
+async function safeGet(key){
+  try{
+    if(hasSharedStorage()){
+      const res = await window.storage.get(key, true);
+      return res ? res.value : null;
+    } else {
+      return localStorage.getItem(key + '-local');
+    }
+  } catch(err){
+    return null; // chave ainda não existe — primeira vez usando o app
+  }
+}
+
+async function initStorage(){
+  try{
+    const shoesRaw = await safeGet('shoes-data');
+    if(shoesRaw){
+      DATA = JSON.parse(shoesRaw);
+    } else {
+      DATA = JSON.parse(JSON.stringify(initialData));
+      await persistShoes();
+    }
+    nextId = Math.max(0, ...DATA.map(d=>d.id), 0) + 1;
+
+    const catalogRaw = await safeGet('catalog-data');
+    if(catalogRaw){
+      CATALOG = JSON.parse(catalogRaw);
+    } else {
+      const seen = {};
+      CATALOG = [];
+      DATA.forEach(d => {
+        const key = catalogKey(d.categoria, d.codigo);
+        if(!seen[key]){
+          seen[key] = true;
+          CATALOG.push({ id:key, categoria:d.categoria, codigo:d.codigo, cor:d.cor||'', foto:d.foto||'' });
+        }
+      });
+      await persistCatalog();
+    }
+
+    storageReady = true;
+    render();
+
+    const notice = document.getElementById('shareNotice');
+    if(hasSharedStorage()){
+      notice.textContent = '🔗 lista compartilhada — qualquer pessoa com este link vê e edita';
+    } else {
+      notice.textContent = '💾 salvando só neste navegador (não compartilhado)';
+    }
+  } catch(err){
+    storageReady = false;
+    DATA = JSON.parse(JSON.stringify(initialData));
+    nextId = Math.max(0, ...DATA.map(d=>d.id), 0) + 1;
+    render();
+    toast('Não foi possível conectar ao armazenamento compartilhado agora.');
+  }
+}
+initStorage();
+
+// Busca de novo o que está salvo (caso outra pessoa tenha alterado a lista
+// nesse meio tempo). Usado no botão "Atualizar" e ao voltar pro app.
+async function refreshFromStorage(showToast){
+  try{
+    const shoesRaw = await safeGet('shoes-data');
+    if(shoesRaw){
+      DATA = JSON.parse(shoesRaw);
+      nextId = Math.max(0, ...DATA.map(d=>d.id), 0) + 1;
+    }
+    const catalogRaw = await safeGet('catalog-data');
+    if(catalogRaw){
+      CATALOG = JSON.parse(catalogRaw);
+    }
+    render();
+    if(showToast) toast('Lista atualizada.');
+  } catch(err){
+    if(showToast) toast('Não foi possível atualizar agora.');
+  }
+}
+
+function saveToDB(item){
+  persistShoes();
+}
+
+function deleteFromDB(id){
+  persistShoes();
+}
+
+function saveCatalogEntry(entry){
+  const idx = CATALOG.findIndex(c => c.id === entry.id);
+  if(idx >= 0) CATALOG[idx] = entry; else CATALOG.push(entry);
+  persistCatalog();
+}
+
+function deleteCatalogEntry(id){
+  CATALOG = CATALOG.filter(c => c.id !== id);
+  persistCatalog();
+}
+
+// Toda vez que um sapato é salvo na lista de compras, o cadastro (código,
+// cor, categoria, foto) também é guardado no estoque — que não é apagado
+// quando o item é removido da lista de compras.
+function upsertCatalogFromItem(payload, codigo){
+  const key = catalogKey(payload.categoria, codigo);
+  const existing = CATALOG.find(c => c.id === key);
+  saveCatalogEntry({
+    id: key,
+    categoria: payload.categoria,
+    codigo: codigo,
+    cor: payload.cor || (existing ? existing.cor : ''),
+    foto: payload.foto || (existing ? existing.foto : '')
+  });
+}
+
+const CAT_LABEL = { basquete:"Basquete", bota:"Bota", plataforma:"Plataforma", todos:"Todos" };
+const CAT_ORDER_INDEX = { basquete:0, bota:1, plataforma:2 };
+const main = document.querySelector('main');
+const grid = document.getElementById('grid');
+const searchInput = document.getElementById('searchInput');
+const stampLabel = document.getElementById('stampLabel');
+const hSub = document.getElementById('hSub');
+const countPill = document.getElementById('countPill');
+
+function toast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=> t.classList.remove('show'), 2000);
+}
+
+function hideToast(){
+  const t = document.getElementById('toast');
+  clearTimeout(t._timer);
+  t.classList.remove('show');
+}
+
+// Toast com botão "Desfazer" — usado depois de excluir, dando alguns
+// segundos pra reverter antes do toast sumir.
+function showUndoToast(msg, onUndo){
+  const t = document.getElementById('toast');
+  clearTimeout(t._timer);
+  t.innerHTML = '';
+  const span = document.createElement('span');
+  span.textContent = msg;
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'toast-undo-btn';
+  btn.textContent = 'Desfazer';
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    onUndo();
+  });
+  t.appendChild(span);
+  t.appendChild(btn);
+  t.classList.add('show');
+  t._timer = setTimeout(()=> t.classList.remove('show'), 5000);
+}
+
+// Remove os itens da lista de compras imediatamente (com toast de "Desfazer"),
+// mas mantém tudo pronto pra restaurar caso o usuário se arrependa.
+function scheduleUndoDelete(items, message){
+  DATA = DATA.filter(d => !items.some(it => it.id === d.id));
+  items.forEach(item => deleteFromDB(item.id));
+  render();
+  showUndoToast(message, ()=>{
+    items.forEach(item => { DATA.push(item); saveToDB(item); });
+    render();
+    hideToast();
+  });
+}
+
+const CAT_ICONS = {
+  basquete: `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg>`,
+  bota: `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg>`,
+  plataforma: `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg>`
+};
+const CAT_ICON_DEFAULT = `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5c0-2 1-3 2.5-4L9 10c1.2-1 2.6-1.5 4-1.5h4a3 3 0 0 1 3 3V17a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg>`;
+
+function iconFor(cat, size){
+  const svg = CAT_ICONS[cat] || CAT_ICON_DEFAULT;
+  return svg.replace(/\{\{S\}\}/g, size || 36);
+}
+
+function groupItems(list){
+  const groups = [];
+  const index = {};
+  list.forEach(item => {
+    const key = item.categoria + '|' + (item.codigo||'').trim().toUpperCase();
+    if(!(key in index)){
+      index[key] = groups.length;
+      groups.push({
+        key,
+        categoria: item.categoria,
+        codigo: item.codigo,
+        cor: item.cor,
+        foto: item.foto,
+        fechamento: item.fechamento,
+        rows: []
+      });
+    }
+    const g = groups[index[key]];
+    g.rows.push(item);
+    if(!g.foto && item.foto) g.foto = item.foto;
+    if(!g.cor && item.cor) g.cor = item.cor;
+    if(item.fechamento) g.fechamento = true; 
+  });
+  return groups;
+}
+
+function render(){
+  const term = searchInput.value.toLowerCase().trim();
+  let list = DATA.filter(d => (currentCat === 'todos' || d.categoria === currentCat));
+  if(term){
+    list = list.filter(d =>
+      (d.codigo||'').toLowerCase().includes(term) ||
+      (d.cor||'').toLowerCase().includes(term) ||
+      String(d.numeracao||'').includes(term)
+    );
+  }
+
+  const groups = groupItems(list).sort((a,b) => {
+    // Fechamento tem prioridade máxima: vai para o começo da fila
+    // independentemente da categoria (basquete, bota ou plataforma).
+    if(a.fechamento !== b.fechamento) return a.fechamento ? -1 : 1;
+    return (CAT_ORDER_INDEX[a.categoria] ?? 99) - (CAT_ORDER_INDEX[b.categoria] ?? 99);
+  });
+
+  grid.innerHTML = '';
+  if(groups.length === 0){
+    grid.innerHTML = '<div class="empty">Nenhum sapato aqui ainda.<br>Toque no botão + para adicionar.</div>';
+  } else {
+    const frag = document.createDocumentFragment();
+    groups.forEach(g => {
+      const totalGroup = g.rows.reduce((s,r)=> s + (Number(r.quantidade)||0), 0);
+      const sizeChips = g.rows
+        .sort((a,b)=> (Number(a.numeracao)||0) - (Number(b.numeracao)||0))
+        .map(r => `
+          <span class="size-chip ${r.jaFechado ? 'done' : ''}" data-editid="${r.id}">
+            Nº${r.numeracao ?? '—'} · ${r.quantidade ?? 0}x
+            <span class="check" data-checkid="${r.id}" title="${r.jaFechado ? 'Já fechado' : 'Marcar como já fechado'}">${r.jaFechado ? '✓' : ''}</span>
+            <span class="x" data-delid="${r.id}">✕</span>
+          </span>
+        `).join('');
+
+      const el = document.createElement('div');
+      el.className = `card ${g.fechamento ? 'fechamento' : ''}`;
+      el.innerHTML = `
+        <div class="photo">
+          <div class="fechamento-badge">⚠️</div>
+          <span class="cat-tag ${g.categoria}">${CAT_LABEL[g.categoria]}</span>
+          ${g.foto ? `<img src="${g.foto}" alt="${g.codigo}"><span class="zoom-hint">🔍</span>` : `<span class="ph-icon">${iconFor(g.categoria, 36)}</span>`}
+        </div>
+        <div class="card-body">
+          <div class="codigo">${g.codigo||'—'}</div>
+          <div class="cor">${g.cor||''}</div>
+          <div class="sizes-head">
+            <span>Numerações</span>
+            <span class="total-chip">${totalGroup}x total</span>
+          </div>
+          <div class="size-list">
+            ${sizeChips}
+            <button type="button" class="add-size-chip" data-addcat="${g.categoria}" data-addcodigo="${g.codigo}" data-addcor="${g.cor||''}" data-addfoto="${g.foto||''}" data-addfechamento="${g.fechamento}">+ nº</button>
+          </div>
+        </div>
+        <div class="card-actions">
+          <button class="fechar-btn" data-fechamentocode="${g.key}">⚠️<span class="btn-label"> Fechamento</span></button>
+          <button class="edit" data-editcode="${g.key}">✎<span class="btn-label"> Editar</span></button>
+          <button class="del" data-delcode="${g.key}">🗑<span class="btn-label"> Excluir</span></button>
+        </div>
+      `;
+      frag.appendChild(el);
+    });
+    grid.appendChild(frag);
+  }
+
+  const totalItens = groups.length;
+  const totalPares = list.reduce((s,d)=> s + (Number(d.quantidade)||0), 0);
+  countPill.textContent = totalItens + (totalItens===1 ? ' código' : ' códigos') + ' · ' + totalPares + (totalPares===1?' par':' pares');
+  stampLabel.textContent = CAT_LABEL[currentCat].toUpperCase();
+  hSub.textContent = `${totalPares} par(es) a buscar nesta visão`;
+}
+
+const CAT_ORDER = ['todos','basquete','bota','plataforma'];
+
+function setCategory(cat, direction){
+  currentCat = cat;
+  document.querySelectorAll('nav.tabs button').forEach(b=> b.classList.toggle('active', b.dataset.cat===cat));
+
+  if(direction){
+    grid.classList.add('swiping', direction === 'next' ? 'from-right' : 'from-left');
+    requestAnimationFrame(()=>{
+      render();
+      requestAnimationFrame(()=>{
+        grid.classList.remove('swiping','from-right','from-left');
+      });
+    });
+  } else {
+    render();
+  }
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn=>{
+  btn.addEventListener('click', ()=> setCategory(btn.dataset.cat));
+});
+
+document.getElementById('refreshBtn').addEventListener('click', ()=> refreshFromStorage(true));
+
+// Quando a pessoa volta pro app (troca de aba, desbloqueia o celular etc.),
+// busca de novo os dados — outra pessoa pode ter alterado a lista nesse meio tempo.
+document.addEventListener('visibilitychange', ()=>{
+  if(document.visibilityState !== 'visible') return;
+  if(overlay.classList.contains('show')) return;
+  if(stockOverlay.classList.contains('show')) return;
+  refreshFromStorage(false);
+});
+
+searchInput.addEventListener('input', render);
+
+grid.addEventListener('click', (e)=>{
+  const photoImg = e.target.closest('.photo img');
+  if(photoImg){
+    document.getElementById('lightboxImg').src = photoImg.src;
+    document.getElementById('lightbox').classList.add('show');
+    return;
+  }
+
+  const xBtn = e.target.closest('.x[data-delid]');
+  if(xBtn){
+    const id = Number(xBtn.dataset.delid);
+    const item = DATA.find(d=>d.id===id);
+    if(item){
+      scheduleUndoDelete([item], `Nº ${item.numeracao ?? '—'} removido de ${item.codigo}.`);
+    }
+    return;
+  }
+
+  const checkBtn = e.target.closest('.check[data-checkid]');
+  if(checkBtn){
+    const id = Number(checkBtn.dataset.checkid);
+    const item = DATA.find(d=>d.id===id);
+    if(item){
+      item.jaFechado = !item.jaFechado;
+      saveToDB(item);
+      render();
+    }
+    return;
+  }
+  
+  const chip = e.target.closest('.size-chip[data-editid]');
+  if(chip){ openForm(Number(chip.dataset.editid)); return; }
+
+  const addChip = e.target.closest('.add-size-chip');
+  if(addChip){
+    openForm(null, {
+      categoria: addChip.dataset.addcat,
+      codigo: addChip.dataset.addcodigo,
+      cor: addChip.dataset.addcor,
+      foto: addChip.dataset.addfoto,
+      fechamento: addChip.dataset.addfechamento === 'true'
+    });
+    return;
+  }
+
+  const fechamentoGroupBtn = e.target.closest('button.fechar-btn[data-fechamentocode]');
+  if(fechamentoGroupBtn){
+    const key = fechamentoGroupBtn.dataset.fechamentocode;
+    const groupItems = DATA.filter(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key);
+    if(groupItems.length){
+      const isFechamentoNow = !groupItems[0].fechamento;
+      groupItems.forEach(item => {
+        item.fechamento = isFechamentoNow;
+        saveToDB(item);
+      });
+      render();
+    }
+    return;
+  }
+
+  const editGroupBtn = e.target.closest('button.edit[data-editcode]');
+  if(editGroupBtn){
+    const key = editGroupBtn.dataset.editcode;
+    const first = DATA.find(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key);
+    if(first) openForm(first.id);
+    return;
+  }
+
+  const delGroupBtn = e.target.closest('button.del[data-delcode]');
+  if(delGroupBtn){
+    const key = delGroupBtn.dataset.delcode;
+    const groupItems = DATA.filter(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key);
+    if(groupItems.length){
+      scheduleUndoDelete(groupItems, `${groupItems[0].codigo} removido da lista (segue salvo no 📦 Estoque).`);
+    }
+  }
+});
+
+const lightbox = document.getElementById('lightbox');
+lightbox.addEventListener('click', ()=> lightbox.classList.remove('show'));
+
+const overlay = document.getElementById('overlay');
+const itemForm = document.getElementById('itemForm');
+const catChoice = document.getElementById('catChoice');
+let selectedCat = 'basquete';
+
+catChoice.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  selectedCat = btn.dataset.cat;
+  [...catChoice.children].forEach(b=> b.classList.toggle('sel', b===btn));
+});
+
+function openForm(id, prefill){
+  hideToast();
+  editingId = id || null;
+  photoDataUrl = "";
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoText').textContent = 'Toque para escolher uma foto';
+  document.getElementById('photoFile').value = '';
+  document.getElementById('fFechamento').checked = false;
+  document.getElementById('catalogSearch').value = '';
+  hideCatalogResults();
+  document.getElementById('catalogField').style.display = (id || (prefill && prefill.fromStock)) ? 'none' : '';
+
+  if(id){
+    const item = DATA.find(d=>d.id===id);
+    document.getElementById('formTitle').textContent = 'Editar sapato';
+    document.getElementById('fCodigo').value = item.codigo || '';
+    document.getElementById('fCor').value = item.cor || '';
+    document.getElementById('fNum').value = item.numeracao ?? '';
+    document.getElementById('fQtd').value = item.quantidade ?? '';
+    document.getElementById('fFechamento').checked = item.fechamento || false;
+    selectedCat = item.categoria;
+    if(item.foto){
+      photoDataUrl = item.foto;
+      document.getElementById('photoPreview').src = item.foto;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoText').textContent = 'Toque para trocar a foto';
+    }
+  } else if(prefill){
+    document.getElementById('formTitle').textContent = `Nova numeração — ${prefill.codigo}`;
+    itemForm.reset();
+    document.getElementById('fCodigo').value = prefill.codigo || '';
+    document.getElementById('fCor').value = prefill.cor || '';
+    document.getElementById('fFechamento').checked = prefill.fechamento || false;
+    selectedCat = prefill.categoria || 'basquete';
+    if(prefill.foto){
+      photoDataUrl = prefill.foto;
+      document.getElementById('photoPreview').src = prefill.foto;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoText').textContent = 'Toque para trocar a foto';
+    }
+  } else {
+    document.getElementById('formTitle').textContent = 'Adicionar sapato';
+    itemForm.reset();
+    selectedCat = currentCat === 'todos' ? 'basquete' : currentCat;
+  }
+  [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
+  overlay.classList.add('show');
+  if(prefill){ setTimeout(()=> document.getElementById('fNum').focus(), 150); }
+}
+
+function closeForm(){ overlay.classList.remove('show'); editingId = null; }
+
+const catalogSearch = document.getElementById('catalogSearch');
+const catalogResults = document.getElementById('catalogResults');
+
+function hideCatalogResults(){ catalogResults.classList.remove('show'); catalogResults.innerHTML=''; }
+
+function renderCatalogResults(term){
+  const t = term.toLowerCase().trim();
+  let matches = CATALOG;
+  if(t){
+    matches = CATALOG.filter(g =>
+      (g.codigo||'').toLowerCase().includes(t) ||
+      (g.cor||'').toLowerCase().includes(t)
+    );
+  }
+  matches = matches
+    .slice()
+    .sort((a,b)=> (a.codigo||'').localeCompare(b.codigo||''))
+    .slice(0, 12);
+
+  catalogResults.innerHTML = '';
+  if(matches.length === 0){
+    catalogResults.innerHTML = '<div class="catalog-empty">Nenhum sapato encontrado no catálogo.</div>';
+  } else {
+    matches.forEach(g=>{
+      const div = document.createElement('div');
+      div.className = 'catalog-item';
+      div.innerHTML = `
+        <div class="thumb">${g.foto ? `<img src="${g.foto}" alt="">` : iconFor(g.categoria, 18)}</div>
+        <div class="info">
+          <div class="cod">${g.codigo||'—'}</div>
+          <div class="c">${CAT_LABEL[g.categoria]}${g.cor ? ' · '+g.cor : ''}</div>
+        </div>
+      `;
+      div.addEventListener('click', ()=>{
+        selectedCat = g.categoria;
+        [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
+        document.getElementById('fCodigo').value = g.codigo || '';
+        document.getElementById('fCor').value = g.cor || '';
+        if(g.foto){
+          photoDataUrl = g.foto;
+          document.getElementById('photoPreview').src = g.foto;
+          document.getElementById('photoPreview').style.display = 'block';
+          document.getElementById('photoText').textContent = 'Toque para trocar a foto';
+        }
+        catalogSearch.value = `${g.codigo} — usando cadastro existente`;
+        hideCatalogResults();
+        document.getElementById('fNum').focus();
+      });
+      catalogResults.appendChild(div);
+    });
+  }
+  catalogResults.classList.add('show');
+}
+
+catalogSearch.addEventListener('input', ()=> renderCatalogResults(catalogSearch.value));
+catalogSearch.addEventListener('focus', ()=> renderCatalogResults(catalogSearch.value));
+document.addEventListener('click', (e)=>{
+  if(!e.target.closest('.catalog-wrap')) hideCatalogResults();
+});
+
+const stockOverlay = document.getElementById('stockOverlay');
+const stockSearch = document.getElementById('stockSearch');
+const stockList = document.getElementById('stockList');
+const stockCatFilter = document.getElementById('stockCatFilter');
+let stockCat = 'todos';
+
+function renderStockList(){
+  const t = stockSearch.value.toLowerCase().trim();
+  let matches = CATALOG.filter(g =>
+    (stockCat === 'todos' || g.categoria === stockCat) &&
+    (!t || (g.codigo||'').toLowerCase().includes(t) || (g.cor||'').toLowerCase().includes(t))
+  );
+  matches = matches.slice().sort((a,b)=> (a.codigo||'').localeCompare(b.codigo||''));
+
+  stockList.innerHTML = '';
+  if(matches.length === 0){
+    stockList.innerHTML = '<div class="catalog-empty">Nenhum sapato no estoque nesta categoria.</div>';
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  matches.forEach(g=>{
+    const div = document.createElement('div');
+    div.className = 'catalog-item stock-row';
+    div.innerHTML = `
+      <div class="thumb">${g.foto ? `<img src="${g.foto}" alt="">` : iconFor(g.categoria, 18)}</div>
+      <div class="info">
+        <div class="cod">${g.codigo||'—'}</div>
+        <div class="c">${CAT_LABEL[g.categoria]}${g.cor ? ' · '+g.cor : ''}</div>
+      </div>
+      <div class="stock-actions">
+        <button type="button" class="mini-btn icon-btn" data-addstock="${g.id}" title="Adicionar à lista">➕</button>
+        <button type="button" class="mini-btn icon-btn" data-delstock="${g.id}" title="Excluir do estoque">🗑</button>
+      </div>
+    `;
+    frag.appendChild(div);
+  });
+  stockList.appendChild(frag);
+}
+
+stockSearch.addEventListener('input', renderStockList);
+
+stockCatFilter.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  stockCat = btn.dataset.cat;
+  [...stockCatFilter.children].forEach(b=> b.classList.toggle('sel', b===btn));
+  renderStockList();
+});
+
+document.getElementById('stockBtn').addEventListener('click', ()=>{
+  stockSearch.value = '';
+  stockCat = 'todos';
+  [...stockCatFilter.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat==='todos'));
+  renderStockList();
+  stockOverlay.classList.add('show');
+});
+document.getElementById('stockCloseBtn').addEventListener('click', ()=> stockOverlay.classList.remove('show'));
+stockOverlay.addEventListener('click', (e)=>{ if(e.target === stockOverlay) stockOverlay.classList.remove('show'); });
+
+document.getElementById('stockAddNewBtn').addEventListener('click', ()=>{
+  stockOverlay.classList.remove('show');
+  openForm(null, { categoria: stockCat === 'todos' ? 'basquete' : stockCat, codigo:'', cor:'', foto:'', fechamento:false, fromStock:true });
+  document.getElementById('formTitle').textContent = 'Novo cadastro no estoque';
+});
+
+stockList.addEventListener('click', (e)=>{
+  const addBtn = e.target.closest('[data-addstock]');
+  if(addBtn){
+    const g = CATALOG.find(c=>c.id===addBtn.dataset.addstock);
+    if(g){
+      stockOverlay.classList.remove('show');
+      openForm(null, { categoria:g.categoria, codigo:g.codigo, cor:g.cor, foto:g.foto, fechamento:false, fromStock:true });
+      document.getElementById('formTitle').textContent = `Adicionar à lista — ${g.codigo}`;
+    }
+    return;
+  }
+  const delBtn = e.target.closest('[data-delstock]');
+  if(delBtn){
+    const g = CATALOG.find(c=>c.id===delBtn.dataset.delstock);
+    if(g && confirm(`Excluir ${g.codigo} do estoque?\n\nIsso NÃO remove numerações que já estejam na sua lista de compras — só apaga o cadastro para busca futura.`)){
+      deleteCatalogEntry(g.id);
+      renderStockList();
+      toast('Removido do estoque.');
+    }
+  }
+});
+
+document.getElementById('fabAdd').addEventListener('click', ()=> openForm(null));
+document.getElementById('cancelBtn').addEventListener('click', closeForm);
+overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeForm(); });
+
+// Corrige o teclado do celular cobrindo o botão Salvar: mantém o overlay
+// do tamanho real da área visível da tela (sem o teclado por baixo).
+if(window.visualViewport){
+  const vv = window.visualViewport;
+  const fixOverlaySize = () => {
+    overlay.style.height = vv.height + 'px';
+    overlay.style.top = vv.offsetTop + 'px';
+  };
+  vv.addEventListener('resize', fixOverlaySize);
+  vv.addEventListener('scroll', fixOverlaySize);
+  fixOverlaySize();
+}
+
+// Quando um campo ganha foco (teclado abre), garante que os botões de
+// Salvar/Cancelar fiquem visíveis rolando a tela até eles.
+itemForm.addEventListener('focusin', ()=>{
+  setTimeout(()=>{
+    document.querySelector('.sheet-actions')?.scrollIntoView({block:'end', behavior:'smooth'});
+  }, 300);
+});
+
+// Redimensiona e comprime a foto no próprio navegador antes de guardar,
+// pra evitar que o banco de dados fique pesado e o app trave com o tempo.
+function compressImage(file, maxDim = 900, quality = 0.72){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Não foi possível ler a imagem.'));
+    reader.onload = (evt) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('Não foi possível processar a imagem.'));
+      img.onload = () => {
+        let { width, height } = img;
+        if(width > maxDim || height > maxDim){
+          if(width >= height){ height = Math.round(height * (maxDim / width)); width = maxDim; }
+          else { width = Math.round(width * (maxDim / height)); height = maxDim; }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width; canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = evt.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+document.getElementById('photoFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('photoText').textContent = 'Otimizando foto...';
+  compressImage(file)
+    .then(dataUrl => {
+      photoDataUrl = dataUrl;
+      document.getElementById('photoPreview').src = photoDataUrl;
+      document.getElementById('photoPreview').style.display = 'block';
+      document.getElementById('photoText').textContent = 'Toque para trocar a foto';
+    })
+    .catch(err => {
+      toast('Erro ao processar a foto: ' + err.message);
+      document.getElementById('photoText').textContent = 'Toque para escolher uma foto';
+    });
+});
+
+itemForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const codigo = document.getElementById('fCodigo').value.trim();
+  const cor = document.getElementById('fCor').value.trim();
+  const numeracao = document.getElementById('fNum').value.trim();
+  const quantidade = document.getElementById('fQtd').value.trim();
+  const fechamento = document.getElementById('fFechamento').checked;
+
+  if(!codigo){ toast('Preencha ao menos o Código.'); return; }
+  if(!storageReady){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
+
+  const payload = {
+    categoria: selectedCat,
+    codigo,
+    cor,
+    numeracao: numeracao === '' ? null : Number(numeracao),
+    quantidade: quantidade === '' ? null : Number(quantidade),
+    foto: photoDataUrl,
+    fechamento
+  };
+
+  try{
+    if(editingId){
+      const idx = DATA.findIndex(d=>d.id===editingId);
+      DATA[idx] = { ...DATA[idx], ...payload };
+
+      const key = DATA[idx].categoria + '|' + DATA[idx].codigo.trim().toUpperCase();
+      DATA.filter(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key).forEach(item => {
+        item.fechamento = payload.fechamento;
+        item.foto = payload.foto || item.foto;
+        saveToDB(item);
+      });
+
+      upsertCatalogFromItem(payload, codigo);
+      toast('Sapato atualizado.');
+    } else {
+      const newItem = { id: nextId++, ...payload };
+      DATA.push(newItem);
+      saveToDB(newItem);
+      upsertCatalogFromItem(payload, codigo);
+      toast('Sapato adicionado à lista.');
+    }
+    closeForm();
+    render();
+  }catch(err){
+    toast('Erro ao salvar: ' + err.message);
+  }
+});
+
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'fechamento_calcados.json'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Arquivo exportado.');
+});
+
+document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = (evt)=>{
+    try{
+      const imported = JSON.parse(evt.target.result);
+      if(!Array.isArray(imported)) throw new Error('formato inválido');
+
+      DATA = imported.map((d,i)=> ({
+        id:i+1, categoria:d.categoria||'basquete', codigo:d.codigo||'', cor:d.cor||'',
+        numeracao:d.numeracao??null, quantidade:d.quantidade??null, foto:d.foto||'',
+        fechamento:d.fechamento||false, jaFechado:d.jaFechado||false
+      }));
+      nextId = DATA.length+1;
+      persistShoes();
+
+      const seen = {};
+      DATA.forEach(item => {
+        const key = catalogKey(item.categoria, item.codigo);
+        if(!seen[key]){
+          seen[key] = true;
+          upsertCatalogFromItem(item, item.codigo);
+        }
+      });
+
+      render();
+      toast('Lista importada com sucesso.');
+    }catch(err){ toast('Erro ao importar: ' + err.message); }
+  };
+  reader.readAsText(file);
+});
+</script>
+</body>
+</html>
