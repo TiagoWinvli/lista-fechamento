@@ -237,7 +237,6 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   .cat-tag{ font-size:9.5px; padding:1.5px 6px 0; top:6px; left:6px; }
   .fechamento-badge{ font-size:13px; top:6px; right:6px; }
   .ph-icon{ font-size:30px; }
-  .ph-icon svg{ width:30px; height:30px; }
   .card-actions button{ padding:9px 3px; font-size:14px; }
   .card-actions .btn-label{ display:none; }
 }
@@ -318,7 +317,6 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .cat-choice button.sel[data-cat="plataforma"]{ background: var(--c-plat-soft); border-color: var(--c-plat); color: var(--c-plat);}
 .cat-choice button.sel[data-cat="todos"]{ background: var(--paper-2); border-color: var(--ink); color: var(--ink);}
 .cat-choice.compact button{ padding:8px 4px; font-size:12.5px; }
-.cat-icon{ vertical-align:-3px; margin-right:4px; }
 .photo-input{
   border: 1.5px dashed var(--line); border-radius: 10px; padding: 14px; text-align:center;
   cursor:pointer; position:relative; background: var(--card);
@@ -396,13 +394,10 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   </div>
   <div class="topbar-actions">
     <button class="mini-btn icon-btn" id="themeToggle">🌓</button>
-    <button class="mini-btn icon-btn" id="refreshBtn">🔄</button>
     <button class="mini-btn" id="stockBtn">📦 Estoque</button>
     <button class="mini-btn" id="exportBtn">⬇ Exportar</button>
     <button class="mini-btn" id="importBtn">⬆ Importar</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
-  </div>
-  <div id="shareNotice" style="margin-top:8px; font-size:11px; font-family:'JetBrains Mono',monospace; color:var(--ink-soft); text-align:center;">
   </div>
 </header>
 
@@ -413,10 +408,10 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 <button class="fab" id="fabAdd" aria-label="Adicionar sapato">+</button>
 
 <nav class="tabs">
-  <button data-cat="todos" class="active"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg></span>Todos</button>
-  <button data-cat="basquete"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg></span>Basquete</button>
-  <button data-cat="bota"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg></span>Bota</button>
-  <button data-cat="plataforma"><span class="dot"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg></span>Plataforma</button>
+  <button data-cat="todos" class="active"><span class="dot">◆</span>Todos</button>
+  <button data-cat="basquete"><span class="dot">🏀</span>Basquete</button>
+  <button data-cat="bota"><span class="dot">👢</span>Bota</button>
+  <button data-cat="plataforma"><span class="dot">⬆</span>Plataforma</button>
 </nav>
 
 <div class="overlay" id="overlay">
@@ -435,9 +430,9 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
       <div class="field">
         <label>Categoria</label>
         <div class="cat-choice" id="catChoice">
-          <button type="button" data-cat="basquete"><svg class="cat-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg> Basquete</button>
-          <button type="button" data-cat="bota"><svg class="cat-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg> Bota</button>
-          <button type="button" data-cat="plataforma"><svg class="cat-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg> Plataforma</button>
+          <button type="button" data-cat="basquete">🏀 Basquete</button>
+          <button type="button" data-cat="bota">👢 Bota</button>
+          <button type="button" data-cat="plataforma">⬆ Plataforma</button>
         </div>
       </div>
       <div class="field">
@@ -486,9 +481,9 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
     <h2>📦 Estoque cadastrado</h2>
     <div class="cat-choice compact" id="stockCatFilter" style="margin-bottom:10px;">
       <button type="button" class="sel" data-cat="todos">Todos</button>
-      <button type="button" data-cat="basquete"><svg class="cat-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg> Basq.</button>
-      <button type="button" data-cat="bota"><svg class="cat-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg> Bota</button>
-      <button type="button" data-cat="plataforma"><svg class="cat-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg> Plat.</button>
+      <button type="button" data-cat="basquete">🏀 Basq.</button>
+      <button type="button" data-cat="bota">👢 Bota</button>
+      <button type="button" data-cat="plataforma">⬆ Plat.</button>
     </div>
     <div class="field catalog-wrap">
       <input type="text" id="stockSearch" autocomplete="off" placeholder="Buscar por código ou cor...">
@@ -507,12 +502,16 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 
 <div id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 let DATA = [];
-let nextId = 1;
+function newId(){
+  return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('id_' + Date.now() + '_' + Math.random().toString(36).slice(2));
+}
 let currentCat = 'todos';
 let editingId = null;
 let photoDataUrl = "";
+let db;
 
 if(localStorage.getItem('theme') === 'dark'){
   document.body.classList.add('dark-mode');
@@ -525,140 +524,205 @@ document.getElementById('themeToggle').addEventListener('click', () => {
 const initialData = [{"id": 1, "categoria": "basquete", "codigo": "CT00010007", "cor": "Preto/Vermelho", "numeracao": 41, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 2, "categoria": "basquete", "codigo": "CT35240002", "cor": "Vinho/Preto/Branco", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 3, "categoria": "basquete", "codigo": "CT34120004", "cor": "Terra Molhada Preto/Branco", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 4, "categoria": "basquete", "codigo": "CT04200003", "cor": "Verde Oliva Preto/Branco", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 5, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 6, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 7, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 8, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 35, "quantidade": 5, "foto": "", "fechamento": false}, {"id": 9, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 36, "quantidade": 3, "foto": "", "fechamento": false}, {"id": 10, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 37, "quantidade": 4, "foto": "", "fechamento": false}, {"id": 11, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 38, "quantidade": 8, "foto": "", "fechamento": false}, {"id": 12, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 39, "quantidade": 3, "foto": "", "fechamento": false}, {"id": 13, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 40, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 14, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 41, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 15, "categoria": "basquete", "codigo": "CT33510003", "cor": "Café com Leite/Amêndoa", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 16, "categoria": "basquete", "codigo": "CT33510003", "cor": "Café com Leite/Amêndoa", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 17, "categoria": "basquete", "codigo": "CT35060003", "cor": "Marrom Ferrugem/Marfim", "numeracao": 33, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 18, "categoria": "basquete", "codigo": "CT35060003", "cor": "Marrom Ferrugem/Marfim", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 19, "categoria": "basquete", "codigo": "CT35060004", "cor": "Ouro Enferrujado", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 20, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 21, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 22, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 38, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 23, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 24, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 36, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 25, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 26, "categoria": "bota", "codigo": "CK16050002", "cor": "Rosa Creme/Ouro Claro", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 27, "categoria": "bota", "codigo": "CT34990001", "cor": "Castanha Clara/Ouro Claro", "numeracao": 36, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 28, "categoria": "bota", "codigo": "CT04510001", "cor": "Branco/Vermelho", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 29, "categoria": "bota", "codigo": "CT04510001", "cor": "Branco/Vermelho", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 30, "categoria": "plataforma", "codigo": "CT34900002", "cor": "Branco/Ouro Claro", "numeracao": 36, "quantidade": 3, "foto": "", "fechamento": false}];
 
 let CATALOG = [];
-let storageReady = false;
 
 function catalogKey(categoria, codigo){
   return (categoria||'') + '|' + (codigo||'').trim().toUpperCase();
 }
 
-function hasSharedStorage(){
-  return typeof window.storage !== 'undefined' && window.storage && typeof window.storage.set === 'function';
+// ============================================================
+// MODO NUVEM (Supabase) — para vários usuários editarem juntos.
+// Preencha SUPABASE_URL e SUPABASE_ANON_KEY (veja instruções que
+// acompanham este arquivo) para ativar. Enquanto estiver vazio,
+// o app funciona normalmente salvando só neste aparelho/navegador.
+// ============================================================
+const SUPABASE_URL = 'https://hfoewuyrrsydrcclmcnx.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhmb2V3dXlycnN5ZHJjY2xtY254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAxNTcsImV4cCI6MjEwMDMzNjE1N30.w5KHGmXt2yUR09rsi0Gdjs7_b610zYg0MFKaXtVYYg8';
+
+let CLOUD_MODE = false;
+let supa = null;
+if(
+  SUPABASE_URL && SUPABASE_ANON_KEY &&
+  !SUPABASE_URL.includes('COLOQUE_AQUI') && !SUPABASE_ANON_KEY.includes('COLOQUE_AQUI') &&
+  window.supabase
+){
+  CLOUD_MODE = true;
+  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 }
 
-// Guarda tudo em armazenamento COMPARTILHADO (quando o app está aberto pelo
-// link publicado do Claude). Se estiver aberto como arquivo baixado, esse
-// recurso não existe — nesse caso, guarda só neste navegador (localStorage),
-// pra não travar o app com erro.
-async function persistShoes(){
-  try{
-    if(hasSharedStorage()){
-      await window.storage.set('shoes-data', JSON.stringify(DATA), true);
+function itemToRow(item){
+  return {
+    id: item.id,
+    categoria: item.categoria,
+    codigo: item.codigo,
+    cor: item.cor,
+    numeracao: item.numeracao,
+    quantidade: item.quantidade,
+    foto: item.foto || '',
+    fechamento: !!item.fechamento,
+    ja_fechado: !!item.jaFechado
+  };
+}
+function rowToItem(row){
+  return {
+    id: row.id,
+    categoria: row.categoria,
+    codigo: row.codigo,
+    cor: row.cor,
+    numeracao: row.numeracao,
+    quantidade: row.quantidade,
+    foto: row.foto || '',
+    fechamento: !!row.fechamento,
+    jaFechado: !!row.ja_fechado
+  };
+}
+
+if(CLOUD_MODE){
+  loadFromDB();
+  loadCatalogFromDB();
+  // Como vários usuários editam ao mesmo tempo, atualiza periodicamente
+  // pra puxar o que outras pessoas mudaram.
+  setInterval(()=>{ loadFromDB(); loadCatalogFromDB(); }, 6000);
+} else {
+  const requestDB = indexedDB.open("CalcadosDB", 5);
+  requestDB.onupgradeneeded = function(e) {
+    db = e.target.result;
+    const tx = e.target.transaction;
+    const isNewShoesStore = !db.objectStoreNames.contains('shoes');
+    let shoesStore;
+    if(isNewShoesStore) {
+      shoesStore = db.createObjectStore('shoes', {keyPath: 'id'});
+      initialData.forEach(d => shoesStore.add(d));
     } else {
-      localStorage.setItem('shoes-data-local', JSON.stringify(DATA));
+      // Loja já existe: NUNCA apagar os sapatos já cadastrados do usuário aqui.
+      shoesStore = tx.objectStore('shoes');
     }
-  } catch(err){
-    toast('Erro ao salvar: ' + err.message);
+
+    if(!db.objectStoreNames.contains('catalog')) {
+      const catalogStore = db.createObjectStore('catalog', {keyPath: 'id'});
+      if(isNewShoesStore){
+        // Instalação nova: semeia o estoque a partir dos dados de exemplo.
+        const seen = {};
+        initialData.forEach(d => {
+          const key = catalogKey(d.categoria, d.codigo);
+          if(!seen[key]){
+            seen[key] = true;
+            catalogStore.add({ id:key, categoria:d.categoria, codigo:d.codigo, cor:d.cor||'', foto:d.foto||'' });
+          }
+        });
+      } else {
+        // Usuário existente: migra os sapatos que já tem na lista para o novo estoque,
+        // assim nada que já foi cadastrado se perde.
+        const getAllReq = shoesStore.getAll();
+        getAllReq.onsuccess = function(){
+          const seen = {};
+          getAllReq.result.forEach(d => {
+            const key = catalogKey(d.categoria, d.codigo);
+            if(!seen[key]){
+              seen[key] = true;
+              catalogStore.put({ id:key, categoria:d.categoria, codigo:d.codigo, cor:d.cor||'', foto:d.foto||'' });
+            }
+          });
+        };
+      }
+    }
+  };
+  requestDB.onsuccess = function(e) {
+    db = e.target.result;
+    loadFromDB();
+    loadCatalogFromDB();
+  };
+  requestDB.onerror = function(e) {
+    toast('Não foi possível acessar o armazenamento do dispositivo. Se estiver em aba anônima/privada, saia dela e tente de novo.');
+  };
+  requestDB.onblocked = function(e) {
+    toast('Feche outras abas com este app abertas e tente novamente.');
+  };
+}
+
+function loadFromDB() {
+  if(CLOUD_MODE){
+    supa.from('shoes').select('*').then(({data, error})=>{
+      if(error){ toast('Erro ao carregar da nuvem: ' + error.message); return; }
+      DATA = (data||[]).map(rowToItem);
+      render();
+    });
+    return;
   }
-}
-
-async function persistCatalog(){
-  try{
-    if(hasSharedStorage()){
-      await window.storage.set('catalog-data', JSON.stringify(CATALOG), true);
-    } else {
-      localStorage.setItem('catalog-data-local', JSON.stringify(CATALOG));
-    }
-  } catch(err){
-    toast('Erro ao salvar no estoque: ' + err.message);
-  }
-}
-
-async function safeGet(key){
-  try{
-    if(hasSharedStorage()){
-      const res = await window.storage.get(key, true);
-      return res ? res.value : null;
-    } else {
-      return localStorage.getItem(key + '-local');
-    }
-  } catch(err){
-    return null; // chave ainda não existe — primeira vez usando o app
-  }
-}
-
-async function initStorage(){
-  try{
-    const shoesRaw = await safeGet('shoes-data');
-    if(shoesRaw){
-      DATA = JSON.parse(shoesRaw);
-    } else {
-      DATA = JSON.parse(JSON.stringify(initialData));
-      await persistShoes();
-    }
-    nextId = Math.max(0, ...DATA.map(d=>d.id), 0) + 1;
-
-    const catalogRaw = await safeGet('catalog-data');
-    if(catalogRaw){
-      CATALOG = JSON.parse(catalogRaw);
-    } else {
-      const seen = {};
-      CATALOG = [];
-      DATA.forEach(d => {
-        const key = catalogKey(d.categoria, d.codigo);
-        if(!seen[key]){
-          seen[key] = true;
-          CATALOG.push({ id:key, categoria:d.categoria, codigo:d.codigo, cor:d.cor||'', foto:d.foto||'' });
-        }
-      });
-      await persistCatalog();
-    }
-
-    storageReady = true;
+  const tx = db.transaction('shoes', 'readonly');
+  const store = tx.objectStore('shoes');
+  const req = store.getAll();
+  req.onsuccess = function() {
+    DATA = req.result;
     render();
+  };
+}
 
-    const notice = document.getElementById('shareNotice');
-    if(hasSharedStorage()){
-      notice.textContent = '🔗 lista compartilhada — qualquer pessoa com este link vê e edita';
-    } else {
-      notice.textContent = '💾 salvando só neste navegador (não compartilhado)';
-    }
-  } catch(err){
-    storageReady = false;
-    DATA = JSON.parse(JSON.stringify(initialData));
-    nextId = Math.max(0, ...DATA.map(d=>d.id), 0) + 1;
-    render();
-    toast('Não foi possível conectar ao armazenamento compartilhado agora.');
+function saveToDB(item) {
+  if(CLOUD_MODE){
+    supa.from('shoes').upsert(itemToRow(item)).then(({error})=>{
+      if(error) toast('Erro ao salvar na nuvem: ' + error.message);
+    });
+    return;
   }
+  const tx = db.transaction('shoes', 'readwrite');
+  tx.onerror = function(e){
+    toast('Erro ao salvar no dispositivo: ' + (e.target.error ? e.target.error.message : 'tente uma foto menor.'));
+  };
+  tx.objectStore('shoes').put(item);
 }
-initStorage();
 
-// Busca de novo o que está salvo (caso outra pessoa tenha alterado a lista
-// nesse meio tempo). Usado no botão "Atualizar" e ao voltar pro app.
-async function refreshFromStorage(showToast){
-  try{
-    const shoesRaw = await safeGet('shoes-data');
-    if(shoesRaw){
-      DATA = JSON.parse(shoesRaw);
-      nextId = Math.max(0, ...DATA.map(d=>d.id), 0) + 1;
-    }
-    const catalogRaw = await safeGet('catalog-data');
-    if(catalogRaw){
-      CATALOG = JSON.parse(catalogRaw);
-    }
-    render();
-    if(showToast) toast('Lista atualizada.');
-  } catch(err){
-    if(showToast) toast('Não foi possível atualizar agora.');
+function deleteFromDB(id) {
+  if(CLOUD_MODE){
+    supa.from('shoes').delete().eq('id', id).then(({error})=>{
+      if(error) toast('Erro ao excluir na nuvem: ' + error.message);
+    });
+    return;
   }
+  const tx = db.transaction('shoes', 'readwrite');
+  tx.objectStore('shoes').delete(id);
 }
 
-function saveToDB(item){
-  persistShoes();
+function loadCatalogFromDB() {
+  if(CLOUD_MODE){
+    supa.from('catalog').select('*').then(({data, error})=>{
+      if(error){ toast('Erro ao carregar estoque da nuvem: ' + error.message); return; }
+      CATALOG = (data||[]).map(r => ({ id:r.id, categoria:r.categoria, codigo:r.codigo, cor:r.cor||'', foto:r.foto||'' }));
+    });
+    return;
+  }
+  const tx = db.transaction('catalog', 'readonly');
+  const req = tx.objectStore('catalog').getAll();
+  req.onsuccess = function() {
+    CATALOG = req.result;
+  };
 }
 
-function deleteFromDB(id){
-  persistShoes();
-}
-
-function saveCatalogEntry(entry){
+function saveCatalogEntry(entry) {
   const idx = CATALOG.findIndex(c => c.id === entry.id);
   if(idx >= 0) CATALOG[idx] = entry; else CATALOG.push(entry);
-  persistCatalog();
+  if(CLOUD_MODE){
+    supa.from('catalog').upsert(entry).then(({error})=>{
+      if(error) toast('Erro ao salvar estoque na nuvem: ' + error.message);
+    });
+    return;
+  }
+  const tx = db.transaction('catalog', 'readwrite');
+  tx.onerror = function(e){
+    toast('Erro ao salvar no estoque: ' + (e.target.error ? e.target.error.message : 'tente uma foto menor.'));
+  };
+  tx.objectStore('catalog').put(entry);
 }
 
-function deleteCatalogEntry(id){
+function deleteCatalogEntry(id) {
   CATALOG = CATALOG.filter(c => c.id !== id);
-  persistCatalog();
+  if(CLOUD_MODE){
+    supa.from('catalog').delete().eq('id', id).then(({error})=>{
+      if(error) toast('Erro ao excluir do estoque na nuvem: ' + error.message);
+    });
+    return;
+  }
+  const tx = db.transaction('catalog', 'readwrite');
+  tx.objectStore('catalog').delete(id);
 }
 
 // Toda vez que um sapato é salvo na lista de compras, o cadastro (código,
@@ -734,17 +798,7 @@ function scheduleUndoDelete(items, message){
   });
 }
 
-const CAT_ICONS = {
-  basquete: `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18M5.6 5.6c2.9 3 2.9 9.8 0 12.8M18.4 5.6c-2.9 3-2.9 9.8 0 12.8"/></svg>`,
-  bota: `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v7.3l-1.4 2C6.6 13.6 6 15 6 16.5V19a1 1 0 0 0 1 1h13a1 1 0 0 0 1-1v-1.3c0-.8-.5-1.5-1.3-1.8L14 14V3"/><path d="M9 3h5"/></svg>`,
-  plataforma: `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8c2.6 0 4.1.8 5.7 2.3l1.9 1.8c1.4 1.3 3.2 2 5.1 2.1.9 0 1.8.2 2.6.6"/><path d="M3 8v9.5h18c0-1.9-1.6-3.5-3.5-3.5H3"/></svg>`
-};
-const CAT_ICON_DEFAULT = `<svg viewBox="0 0 24 24" width="{{S}}" height="{{S}}" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M4 16.5c0-2 1-3 2.5-4L9 10c1.2-1 2.6-1.5 4-1.5h4a3 3 0 0 1 3 3V17a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1z"/></svg>`;
-
-function iconFor(cat, size){
-  const svg = CAT_ICONS[cat] || CAT_ICON_DEFAULT;
-  return svg.replace(/\{\{S\}\}/g, size || 36);
-}
+function iconFor(cat){ return {basquete:'🏀', bota:'👢', plataforma:'⬆'}[cat] || '👟'; }
 
 function groupItems(list){
   const groups = [];
@@ -813,7 +867,7 @@ function render(){
         <div class="photo">
           <div class="fechamento-badge">⚠️</div>
           <span class="cat-tag ${g.categoria}">${CAT_LABEL[g.categoria]}</span>
-          ${g.foto ? `<img src="${g.foto}" alt="${g.codigo}"><span class="zoom-hint">🔍</span>` : `<span class="ph-icon">${iconFor(g.categoria, 36)}</span>`}
+          ${g.foto ? `<img src="${g.foto}" alt="${g.codigo}"><span class="zoom-hint">🔍</span>` : `<span class="ph-icon">${iconFor(g.categoria)}</span>`}
         </div>
         <div class="card-body">
           <div class="codigo">${g.codigo||'—'}</div>
@@ -868,17 +922,6 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
   btn.addEventListener('click', ()=> setCategory(btn.dataset.cat));
 });
 
-document.getElementById('refreshBtn').addEventListener('click', ()=> refreshFromStorage(true));
-
-// Quando a pessoa volta pro app (troca de aba, desbloqueia o celular etc.),
-// busca de novo os dados — outra pessoa pode ter alterado a lista nesse meio tempo.
-document.addEventListener('visibilitychange', ()=>{
-  if(document.visibilityState !== 'visible') return;
-  if(overlay.classList.contains('show')) return;
-  if(stockOverlay.classList.contains('show')) return;
-  refreshFromStorage(false);
-});
-
 searchInput.addEventListener('input', render);
 
 grid.addEventListener('click', (e)=>{
@@ -891,7 +934,7 @@ grid.addEventListener('click', (e)=>{
 
   const xBtn = e.target.closest('.x[data-delid]');
   if(xBtn){
-    const id = Number(xBtn.dataset.delid);
+    const id = xBtn.dataset.delid;
     const item = DATA.find(d=>d.id===id);
     if(item){
       scheduleUndoDelete([item], `Nº ${item.numeracao ?? '—'} removido de ${item.codigo}.`);
@@ -901,7 +944,7 @@ grid.addEventListener('click', (e)=>{
 
   const checkBtn = e.target.closest('.check[data-checkid]');
   if(checkBtn){
-    const id = Number(checkBtn.dataset.checkid);
+    const id = checkBtn.dataset.checkid;
     const item = DATA.find(d=>d.id===id);
     if(item){
       item.jaFechado = !item.jaFechado;
@@ -912,7 +955,7 @@ grid.addEventListener('click', (e)=>{
   }
   
   const chip = e.target.closest('.size-chip[data-editid]');
-  if(chip){ openForm(Number(chip.dataset.editid)); return; }
+  if(chip){ openForm(chip.dataset.editid); return; }
 
   const addChip = e.target.closest('.add-size-chip');
   if(addChip){
@@ -1053,7 +1096,7 @@ function renderCatalogResults(term){
       const div = document.createElement('div');
       div.className = 'catalog-item';
       div.innerHTML = `
-        <div class="thumb">${g.foto ? `<img src="${g.foto}" alt="">` : iconFor(g.categoria, 18)}</div>
+        <div class="thumb">${g.foto ? `<img src="${g.foto}" alt="">` : iconFor(g.categoria)}</div>
         <div class="info">
           <div class="cod">${g.codigo||'—'}</div>
           <div class="c">${CAT_LABEL[g.categoria]}${g.cor ? ' · '+g.cor : ''}</div>
@@ -1110,7 +1153,7 @@ function renderStockList(){
     const div = document.createElement('div');
     div.className = 'catalog-item stock-row';
     div.innerHTML = `
-      <div class="thumb">${g.foto ? `<img src="${g.foto}" alt="">` : iconFor(g.categoria, 18)}</div>
+      <div class="thumb">${g.foto ? `<img src="${g.foto}" alt="">` : iconFor(g.categoria)}</div>
       <div class="info">
         <div class="cod">${g.codigo||'—'}</div>
         <div class="c">${CAT_LABEL[g.categoria]}${g.cor ? ' · '+g.cor : ''}</div>
@@ -1251,7 +1294,7 @@ itemForm.addEventListener('submit', (e)=>{
   const fechamento = document.getElementById('fFechamento').checked;
 
   if(!codigo){ toast('Preencha ao menos o Código.'); return; }
-  if(!storageReady){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
+  if(!db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
 
   const payload = {
     categoria: selectedCat,
@@ -1278,7 +1321,7 @@ itemForm.addEventListener('submit', (e)=>{
       upsertCatalogFromItem(payload, codigo);
       toast('Sapato atualizado.');
     } else {
-      const newItem = { id: nextId++, ...payload };
+      const newItem = { id: newId(), ...payload };
       DATA.push(newItem);
       saveToDB(newItem);
       upsertCatalogFromItem(payload, codigo);
@@ -1295,7 +1338,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'fechamento_calcados.json'; a.click();
+  a.href = url; a.download = 'lista_compras_calcados.json'; a.click();
   URL.revokeObjectURL(url);
   toast('Arquivo exportado.');
 });
@@ -1310,25 +1353,51 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
       const imported = JSON.parse(evt.target.result);
       if(!Array.isArray(imported)) throw new Error('formato inválido');
 
-      DATA = imported.map((d,i)=> ({
-        id:i+1, categoria:d.categoria||'basquete', codigo:d.codigo||'', cor:d.cor||'',
-        numeracao:d.numeracao??null, quantidade:d.quantidade??null, foto:d.foto||'',
-        fechamento:d.fechamento||false, jaFechado:d.jaFechado||false
+      const newData = imported.map(d => ({
+        id: newId(),
+        categoria: d.categoria || 'basquete',
+        codigo: d.codigo || '',
+        cor: d.cor || '',
+        numeracao: d.numeracao ?? null,
+        quantidade: d.quantidade ?? null,
+        foto: d.foto || '',
+        fechamento: d.fechamento || false,
+        jaFechado: d.jaFechado || false
       }));
-      nextId = DATA.length+1;
-      persistShoes();
 
-      const seen = {};
-      DATA.forEach(item => {
-        const key = catalogKey(item.categoria, item.codigo);
-        if(!seen[key]){
-          seen[key] = true;
-          upsertCatalogFromItem(item, item.codigo);
-        }
-      });
+      const finishImport = () => {
+        DATA = newData;
+        const seen = {};
+        DATA.forEach(item => {
+          const key = catalogKey(item.categoria, item.codigo);
+          if(!seen[key]){
+            seen[key] = true;
+            upsertCatalogFromItem(item, item.codigo);
+          }
+        });
+        render();
+        toast('Lista importada com sucesso.');
+      };
 
-      render();
-      toast('Lista importada com sucesso.');
+      if(CLOUD_MODE){
+        // Substitui a lista de compras inteira na nuvem (afeta todo mundo que usa este link).
+        supa.from('shoes').select('id').then(({data})=>{
+          const ids = (data||[]).map(r=>r.id);
+          const cleanup = ids.length ? supa.from('shoes').delete().in('id', ids) : Promise.resolve({error:null});
+          Promise.resolve(cleanup).then(()=>{
+            supa.from('shoes').insert(newData.map(itemToRow)).then(({error})=>{
+              if(error){ toast('Erro ao importar na nuvem: ' + error.message); return; }
+              finishImport();
+            });
+          });
+        });
+      } else {
+        const tx = db.transaction('shoes', 'readwrite');
+        const store = tx.objectStore('shoes');
+        store.clear();
+        newData.forEach(item => store.put(item));
+        tx.oncomplete = finishImport;
+      }
     }catch(err){ toast('Erro ao importar: ' + err.message); }
   };
   reader.readAsText(file);
