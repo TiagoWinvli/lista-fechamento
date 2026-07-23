@@ -531,22 +531,28 @@ function catalogKey(categoria, codigo){
 
 // ============================================================
 // MODO NUVEM (Supabase) — para vários usuários editarem juntos.
-// Preencha SUPABASE_URL e SUPABASE_ANON_KEY (veja instruções que
-// acompanham este arquivo) para ativar. Enquanto estiver vazio,
-// o app funciona normalmente salvando só neste aparelho/navegador.
+// Preencha SUPABASE_URL e SUPABASE_ANON_KEY e troque CLOUD_ENABLED
+// para true. Enquanto CLOUD_ENABLED for false, o app funciona
+// normalmente salvando só neste aparelho/navegador (modo local).
 // ============================================================
+const CLOUD_ENABLED = false;
 const SUPABASE_URL = 'https://hfoewuyrrsydrcclmcnx.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhmb2V3dXlycnN5ZHJjY2xtY254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAxNTcsImV4cCI6MjEwMDMzNjE1N30.w5KHGmXt2yUR09rsi0Gdjs7_b610zYg0MFKaXtVYYg8';
 
 let CLOUD_MODE = false;
 let supa = null;
-if(
-  SUPABASE_URL && SUPABASE_ANON_KEY &&
-  !SUPABASE_URL.includes('https://hfoewuyrrsydrcclmcnx.supabase.co') && !SUPABASE_ANON_KEY.includes('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhmb2V3dXlycnN5ZHJjY2xtY254Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ3NjAxNTcsImV4cCI6MjEwMDMzNjE1N30.w5KHGmXt2yUR09rsi0Gdjs7_b610zYg0MFKaXtVYYg8') &&
-  window.supabase
-){
+if(CLOUD_ENABLED && SUPABASE_URL && SUPABASE_ANON_KEY && window.supabase){
   CLOUD_MODE = true;
-  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  // Desativa a persistência/auto-refresh de sessão de autenticação: o app
+  // não usa login, e esse recurso é o que causa o erro
+  // "DataCloneError ... Headers object could not be cloned" em alguns navegadores.
+  supa = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false
+    }
+  });
 }
 
 function itemToRow(item){
@@ -1294,7 +1300,7 @@ itemForm.addEventListener('submit', (e)=>{
   const fechamento = document.getElementById('fFechamento').checked;
 
   if(!codigo){ toast('Preencha ao menos o Código.'); return; }
-  if(!db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
+  if(!CLOUD_MODE && !db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
 
   const payload = {
     categoria: selectedCat,
