@@ -335,6 +335,34 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .btn-secondary{ background: var(--card); color: var(--ink-soft); border:1.5px solid var(--line);}
 
 .topbar-actions{ display:flex; gap:8px; margin-top:10px;}
+.week-bar-wrap{ display:flex; align-items:center; gap:6px; margin-top:10px;}
+.week-bar{
+  display:flex; gap:6px; overflow-x:auto; scrollbar-width:none; flex:1;
+  padding-bottom:2px;
+}
+.week-bar::-webkit-scrollbar{ display:none; }
+.week-chip{
+  flex-shrink:0; white-space:nowrap;
+  font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600;
+  background: var(--card); border:1.5px solid var(--line); border-radius:20px;
+  padding:7px 13px; cursor:pointer; color: var(--ink-soft);
+}
+.week-chip.active{ background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.week-chip.add{ border-style:dashed; }
+.week-manage-btn{
+  flex-shrink:0; width:34px; height:34px; border-radius:50%;
+  background: var(--card); border:1.5px solid var(--line); color: var(--ink-soft);
+  font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+}
+.week-tag-body{
+  font-size:11.5px; color: var(--ink-soft); font-family:'JetBrains Mono',monospace;
+  margin-top:1px;
+}
+@media(max-width:640px){
+  .week-chip{ font-size:11px; padding:6px 10px; }
+  .week-manage-btn{ width:30px; height:30px; font-size:13px; }
+  .week-tag-body{ font-size:10px; }
+}
 .mini-btn{
   flex:1; font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600;
   background: var(--card); border:1.5px solid var(--line); border-radius:8px; padding:9px 6px; cursor:pointer;
@@ -399,6 +427,10 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
     <button class="mini-btn" id="importBtn">⬆ Importar</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
   </div>
+  <div class="week-bar-wrap">
+    <div class="week-bar" id="weekBar"></div>
+    <button class="week-manage-btn" id="weekManageBtn" title="Gerenciar semanas">⚙</button>
+  </div>
 </header>
 
 <main>
@@ -434,6 +466,12 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
           <button type="button" data-cat="bota">👢 Bota</button>
           <button type="button" data-cat="plataforma">⬆ Plataforma</button>
         </div>
+      </div>
+      <div class="field">
+        <label>Semana / Pasta</label>
+        <select id="fSemana">
+          <option value="">Sem semana</option>
+        </select>
       </div>
       <div class="field">
         <label>Foto</label>
@@ -475,6 +513,18 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   </div>
 </div>
 
+<div class="overlay" id="weekOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>🗂 Semanas / Pastas</h2>
+    <div id="weekManageList" style="margin-top:6px; max-height:50vh; overflow-y:auto; border:1.5px solid var(--line); border-radius:10px;"></div>
+    <div class="sheet-actions" style="margin-top:14px;">
+      <button type="button" class="btn btn-secondary" id="weekOverlayCloseBtn">Fechar</button>
+      <button type="button" class="btn btn-primary" id="weekAddBtn">+ Nova semana</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay" id="stockOverlay">
   <div class="sheet" style="max-height:88vh;">
     <div class="sheet-handle"></div>
@@ -512,6 +562,41 @@ let currentCat = 'todos';
 let editingId = null;
 let photoDataUrl = "";
 let db;
+
+// ============================================================
+// SEMANAS / PASTAS — organiza a lista igual às pastas semanais da fábrica.
+// A lista de semanas fica salva no navegador (localStorage); cada sapato
+// guarda a que semana pertence no campo `semana`.
+// ============================================================
+let WEEKS = [];
+try{ WEEKS = JSON.parse(localStorage.getItem('weekFolders') || '[]'); }catch(e){ WEEKS = []; }
+let currentWeek = 'todas';
+
+function saveWeeks(){
+  localStorage.setItem('weekFolders', JSON.stringify(WEEKS));
+}
+
+function weekLabel(w){
+  return w ? w : 'Sem semana';
+}
+
+// Garante que toda semana já usada em algum sapato apareça na lista de
+// pastas, mesmo que tenha vindo de uma importação de JSON.
+function syncWeeksFromData(){
+  const set = new Set(WEEKS);
+  DATA.forEach(d => { if(d.semana) set.add(d.semana); });
+  const merged = Array.from(set);
+  if(merged.length !== WEEKS.length || merged.some((w,i)=> w!==WEEKS[i])){
+    WEEKS = merged;
+    saveWeeks();
+  }
+}
+
+// Chave de agrupamento dos cards: mesmo código só vira o mesmo card se
+// também for da mesma categoria e da mesma semana/pasta.
+function groupKey(item){
+  return item.categoria + '|' + (item.codigo||'').trim().toUpperCase() + '|' + (item.semana||'');
+}
 
 if(localStorage.getItem('theme') === 'dark'){
   document.body.classList.add('dark-mode');
@@ -565,7 +650,8 @@ function itemToRow(item){
     quantidade: item.quantidade,
     foto: item.foto || '',
     fechamento: !!item.fechamento,
-    ja_fechado: !!item.jaFechado
+    ja_fechado: !!item.jaFechado,
+    semana: item.semana || ''
   };
 }
 function rowToItem(row){
@@ -578,7 +664,8 @@ function rowToItem(row){
     quantidade: row.quantidade,
     foto: row.foto || '',
     fechamento: !!row.fechamento,
-    jaFechado: !!row.ja_fechado
+    jaFechado: !!row.ja_fechado,
+    semana: row.semana || ''
   };
 }
 
@@ -810,7 +897,7 @@ function groupItems(list){
   const groups = [];
   const index = {};
   list.forEach(item => {
-    const key = item.categoria + '|' + (item.codigo||'').trim().toUpperCase();
+    const key = groupKey(item);
     if(!(key in index)){
       index[key] = groups.length;
       groups.push({
@@ -820,6 +907,7 @@ function groupItems(list){
         cor: item.cor,
         foto: item.foto,
         fechamento: item.fechamento,
+        semana: item.semana || '',
         rows: []
       });
     }
@@ -833,8 +921,13 @@ function groupItems(list){
 }
 
 function render(){
+  syncWeeksFromData();
+
   const term = searchInput.value.toLowerCase().trim();
-  let list = DATA.filter(d => (currentCat === 'todos' || d.categoria === currentCat));
+  let list = DATA.filter(d =>
+    (currentCat === 'todos' || d.categoria === currentCat) &&
+    (currentWeek === 'todas' || (d.semana||'') === currentWeek)
+  );
   if(term){
     list = list.filter(d =>
       (d.codigo||'').toLowerCase().includes(term) ||
@@ -878,13 +971,14 @@ function render(){
         <div class="card-body">
           <div class="codigo">${g.codigo||'—'}</div>
           <div class="cor">${g.cor||''}</div>
+          ${currentWeek === 'todas' ? `<div class="week-tag-body">🗂 ${weekLabel(g.semana)}</div>` : ''}
           <div class="sizes-head">
             <span>Numerações</span>
             <span class="total-chip">${totalGroup}x total</span>
           </div>
           <div class="size-list">
             ${sizeChips}
-            <button type="button" class="add-size-chip" data-addcat="${g.categoria}" data-addcodigo="${g.codigo}" data-addcor="${g.cor||''}" data-addfoto="${g.foto||''}" data-addfechamento="${g.fechamento}">+ nº</button>
+            <button type="button" class="add-size-chip" data-addcat="${g.categoria}" data-addcodigo="${g.codigo}" data-addcor="${g.cor||''}" data-addfoto="${g.foto||''}" data-addfechamento="${g.fechamento}" data-addsemana="${g.semana||''}">+ nº</button>
           </div>
         </div>
         <div class="card-actions">
@@ -902,8 +996,129 @@ function render(){
   const totalPares = list.reduce((s,d)=> s + (Number(d.quantidade)||0), 0);
   countPill.textContent = totalItens + (totalItens===1 ? ' código' : ' códigos') + ' · ' + totalPares + (totalPares===1?' par':' pares');
   stampLabel.textContent = CAT_LABEL[currentCat].toUpperCase();
-  hSub.textContent = `${totalPares} par(es) a buscar nesta visão`;
+  hSub.textContent = `${totalPares} par(es) a buscar` + (currentWeek === 'todas' ? ' nesta visão' : ` · ${weekLabel(currentWeek)}`);
+
+  renderWeekBar();
 }
+
+const weekBar = document.getElementById('weekBar');
+
+function renderWeekBar(){
+  const chips = [
+    { value:'todas', label:'Todas' },
+    { value:'', label:'Sem semana' },
+    ...WEEKS.map(w => ({ value:w, label:w }))
+  ];
+  weekBar.innerHTML = chips.map(c => `
+    <button type="button" class="week-chip ${currentWeek===c.value ? 'active':''}" data-week="${c.value}">${c.label}</button>
+  `).join('') + `<button type="button" class="week-chip add" id="weekAddChip">+ Nova semana</button>`;
+}
+
+function addNewWeek(){
+  const name = prompt('Nome da nova semana/pasta (ex: Semana 30, 21/07 a 27/07):');
+  if(!name) return null;
+  const trimmed = name.trim();
+  if(!trimmed) return null;
+  if(!WEEKS.includes(trimmed)){
+    WEEKS.push(trimmed);
+    saveWeeks();
+  }
+  return trimmed;
+}
+
+weekBar.addEventListener('click', (e)=>{
+  const addBtn = e.target.closest('#weekAddChip');
+  if(addBtn){
+    const created = addNewWeek();
+    if(created){ currentWeek = created; render(); }
+    return;
+  }
+  const chip = e.target.closest('.week-chip[data-week]');
+  if(chip){
+    currentWeek = chip.dataset.week;
+    render();
+  }
+});
+
+const weekOverlay = document.getElementById('weekOverlay');
+const weekManageList = document.getElementById('weekManageList');
+
+function renderWeekManageList(){
+  if(WEEKS.length === 0){
+    weekManageList.innerHTML = '<div class="catalog-empty">Nenhuma semana criada ainda.</div>';
+    return;
+  }
+  weekManageList.innerHTML = WEEKS.map(w => {
+    const count = DATA.filter(d => (d.semana||'') === w).length;
+    return `
+      <div class="catalog-item stock-row">
+        <div class="info">
+          <div class="cod">${w}</div>
+          <div class="c">${count} numeração(ões)</div>
+        </div>
+        <div class="stock-actions">
+          <button type="button" class="mini-btn icon-btn" data-renameweek="${w}" title="Renomear">✎</button>
+          <button type="button" class="mini-btn icon-btn" data-delweek="${w}" title="Excluir semana">🗑</button>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+document.getElementById('weekManageBtn').addEventListener('click', ()=>{
+  renderWeekManageList();
+  weekOverlay.classList.add('show');
+});
+document.getElementById('weekOverlayCloseBtn').addEventListener('click', ()=> weekOverlay.classList.remove('show'));
+weekOverlay.addEventListener('click', (e)=>{ if(e.target === weekOverlay) weekOverlay.classList.remove('show'); });
+
+document.getElementById('weekAddBtn').addEventListener('click', ()=>{
+  addNewWeek();
+  renderWeekManageList();
+  renderWeekBar();
+});
+
+weekManageList.addEventListener('click', (e)=>{
+  const renameBtn = e.target.closest('[data-renameweek]');
+  if(renameBtn){
+    const oldName = renameBtn.dataset.renameweek;
+    const newName = prompt('Novo nome para esta semana/pasta:', oldName);
+    if(!newName) return;
+    const trimmed = newName.trim();
+    if(!trimmed || trimmed === oldName) return;
+    if(WEEKS.includes(trimmed)){
+      toast('Já existe uma semana com esse nome.');
+      return;
+    }
+    WEEKS = WEEKS.map(w => w === oldName ? trimmed : w);
+    saveWeeks();
+    DATA.filter(d => (d.semana||'') === oldName).forEach(item => {
+      item.semana = trimmed;
+      saveToDB(item);
+    });
+    if(currentWeek === oldName) currentWeek = trimmed;
+    renderWeekManageList();
+    render();
+    toast('Semana renomeada.');
+    return;
+  }
+  const delBtn = e.target.closest('[data-delweek]');
+  if(delBtn){
+    const name = delBtn.dataset.delweek;
+    if(confirm(`Excluir a semana "${name}"?\n\nOs sapatos dela voltam para "Sem semana" — nada é apagado.`)){
+      WEEKS = WEEKS.filter(w => w !== name);
+      saveWeeks();
+      DATA.filter(d => (d.semana||'') === name).forEach(item => {
+        item.semana = '';
+        saveToDB(item);
+      });
+      if(currentWeek === name) currentWeek = 'todas';
+      renderWeekManageList();
+      render();
+      toast('Semana excluída.');
+    }
+  }
+});
 
 const CAT_ORDER = ['todos','basquete','bota','plataforma'];
 
@@ -970,7 +1185,8 @@ grid.addEventListener('click', (e)=>{
       codigo: addChip.dataset.addcodigo,
       cor: addChip.dataset.addcor,
       foto: addChip.dataset.addfoto,
-      fechamento: addChip.dataset.addfechamento === 'true'
+      fechamento: addChip.dataset.addfechamento === 'true',
+      semana: addChip.dataset.addsemana || ''
     });
     return;
   }
@@ -978,7 +1194,7 @@ grid.addEventListener('click', (e)=>{
   const fechamentoGroupBtn = e.target.closest('button.fechar-btn[data-fechamentocode]');
   if(fechamentoGroupBtn){
     const key = fechamentoGroupBtn.dataset.fechamentocode;
-    const groupItems = DATA.filter(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key);
+    const groupItems = DATA.filter(d => groupKey(d) === key);
     if(groupItems.length){
       const isFechamentoNow = !groupItems[0].fechamento;
       groupItems.forEach(item => {
@@ -993,7 +1209,7 @@ grid.addEventListener('click', (e)=>{
   const editGroupBtn = e.target.closest('button.edit[data-editcode]');
   if(editGroupBtn){
     const key = editGroupBtn.dataset.editcode;
-    const first = DATA.find(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key);
+    const first = DATA.find(d => groupKey(d) === key);
     if(first) openForm(first.id);
     return;
   }
@@ -1001,7 +1217,7 @@ grid.addEventListener('click', (e)=>{
   const delGroupBtn = e.target.closest('button.del[data-delcode]');
   if(delGroupBtn){
     const key = delGroupBtn.dataset.delcode;
-    const groupItems = DATA.filter(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key);
+    const groupItems = DATA.filter(d => groupKey(d) === key);
     if(groupItems.length){
       scheduleUndoDelete(groupItems, `${groupItems[0].codigo} removido da lista (segue salvo no 📦 Estoque).`);
     }
@@ -1022,6 +1238,17 @@ catChoice.addEventListener('click', (e)=>{
   selectedCat = btn.dataset.cat;
   [...catChoice.children].forEach(b=> b.classList.toggle('sel', b===btn));
 });
+
+function populateWeekSelect(selected){
+  const sel = document.getElementById('fSemana');
+  const options = ['<option value="">Sem semana</option>']
+    .concat(WEEKS.map(w => `<option value="${w}">${w}</option>`));
+  sel.innerHTML = options.join('');
+  if(selected && !WEEKS.includes(selected)){
+    sel.insertAdjacentHTML('beforeend', `<option value="${selected}">${selected}</option>`);
+  }
+  sel.value = selected || '';
+}
 
 function openForm(id, prefill){
   hideToast();
@@ -1044,6 +1271,7 @@ function openForm(id, prefill){
     document.getElementById('fQtd').value = item.quantidade ?? '';
     document.getElementById('fFechamento').checked = item.fechamento || false;
     selectedCat = item.categoria;
+    populateWeekSelect(item.semana || '');
     if(item.foto){
       photoDataUrl = item.foto;
       document.getElementById('photoPreview').src = item.foto;
@@ -1057,6 +1285,7 @@ function openForm(id, prefill){
     document.getElementById('fCor').value = prefill.cor || '';
     document.getElementById('fFechamento').checked = prefill.fechamento || false;
     selectedCat = prefill.categoria || 'basquete';
+    populateWeekSelect(prefill.semana !== undefined ? prefill.semana : (currentWeek === 'todas' ? '' : currentWeek));
     if(prefill.foto){
       photoDataUrl = prefill.foto;
       document.getElementById('photoPreview').src = prefill.foto;
@@ -1067,6 +1296,7 @@ function openForm(id, prefill){
     document.getElementById('formTitle').textContent = 'Adicionar sapato';
     itemForm.reset();
     selectedCat = currentCat === 'todos' ? 'basquete' : currentCat;
+    populateWeekSelect(currentWeek === 'todas' ? '' : currentWeek);
   }
   [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
   overlay.classList.add('show');
@@ -1298,6 +1528,7 @@ itemForm.addEventListener('submit', (e)=>{
   const numeracao = document.getElementById('fNum').value.trim();
   const quantidade = document.getElementById('fQtd').value.trim();
   const fechamento = document.getElementById('fFechamento').checked;
+  const semana = document.getElementById('fSemana').value;
 
   if(!codigo){ toast('Preencha ao menos o Código.'); return; }
   if(!CLOUD_MODE && !db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
@@ -1309,18 +1540,22 @@ itemForm.addEventListener('submit', (e)=>{
     numeracao: numeracao === '' ? null : Number(numeracao),
     quantidade: quantidade === '' ? null : Number(quantidade),
     foto: photoDataUrl,
-    fechamento
+    fechamento,
+    semana
   };
 
   try{
     if(editingId){
       const idx = DATA.findIndex(d=>d.id===editingId);
+      const oldKey = groupKey(DATA[idx]);
       DATA[idx] = { ...DATA[idx], ...payload };
 
-      const key = DATA[idx].categoria + '|' + DATA[idx].codigo.trim().toUpperCase();
-      DATA.filter(d => (d.categoria+'|'+(d.codigo||'').trim().toUpperCase()) === key).forEach(item => {
+      // Propaga fechamento/foto/semana pra todas as numerações que estavam
+      // no mesmo card (mesmo código, categoria e semana de antes da edição).
+      DATA.filter(d => d.id !== editingId && groupKey(d) === oldKey).forEach(item => {
         item.fechamento = payload.fechamento;
         item.foto = payload.foto || item.foto;
+        item.semana = payload.semana;
         saveToDB(item);
       });
 
@@ -1368,7 +1603,8 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
         quantidade: d.quantidade ?? null,
         foto: d.foto || '',
         fechamento: d.fechamento || false,
-        jaFechado: d.jaFechado || false
+        jaFechado: d.jaFechado || false,
+        semana: d.semana || ''
       }));
 
       const finishImport = () => {
