@@ -326,6 +326,18 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .photo-input input[type=file]{ position:absolute; inset:0; opacity:0; cursor:pointer;}
 .field-row{ display:flex; gap:10px;}
 .field-row .field{ flex:1;}
+.size-row-input{ display:flex; gap:8px; align-items:center; margin-bottom:8px; }
+.size-row-input input{
+  flex:1; min-width:0; background: var(--card); border:1.5px solid var(--line); border-radius:9px;
+  padding: 11px 12px; font-family:'Space Grotesk',sans-serif; font-size:16px; color: var(--ink); outline:none;
+}
+.size-row-input input:focus{ border-color: var(--ink); }
+.size-row-input .row-remove{
+  flex:0 0 34px; width:34px; height:34px; border-radius:50%; border:1.5px solid var(--line);
+  background: var(--card); color: var(--danger); cursor:pointer; font-size:14px;
+  display:flex; align-items:center; justify-content:center;
+}
+.size-row-input .row-remove:hover{ background: var(--danger); color:#fff; border-color:var(--danger); }
 .sheet-actions{ display:flex; gap:10px; margin-top:6px;}
 .btn{
   flex:1; border:none; border-radius:10px; padding:14px; font-family:'Space Grotesk',sans-serif;
@@ -472,8 +484,8 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
       </div>
       <div class="field">
         <label>Semana / Pasta</label>
-        <select id="fSemana">
-          <option value="">Sem semana</option>
+        <select id="fSemana" required>
+          <option value="" disabled selected>Selecione uma semana</option>
         </select>
       </div>
       <div class="field">
@@ -492,7 +504,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
         <label>Cor</label>
         <input type="text" id="fCor" placeholder="ex: Preto/Vermelho">
       </div>
-      <div class="field-row">
+      <div class="field-row" id="singleSizeField">
         <div class="field">
           <label>Numeração</label>
           <input type="number" id="fNum" placeholder="ex: 38">
@@ -501,6 +513,11 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
           <label>Quantidade que preciso</label>
           <input type="number" id="fQtd" min="0" placeholder="ex: 1">
         </div>
+      </div>
+      <div class="field" id="multiSizesField">
+        <label>Numerações e quantidades</label>
+        <div id="sizeRows"></div>
+        <button type="button" class="add-size-chip" id="addSizeRowBtn" style="margin-top:2px;">+ Adicionar numeração</button>
       </div>
       <div class="field" style="margin-top: 10px; margin-bottom: 20px;">
         <label class="field-checkbox">
@@ -574,6 +591,7 @@ let db;
 let WEEKS = [];
 try{ WEEKS = JSON.parse(localStorage.getItem('weekFolders') || '[]'); }catch(e){ WEEKS = []; }
 let currentWeek = localStorage.getItem('currentWeek') || 'todas';
+if(currentWeek === '') currentWeek = 'todas';
 
 // Grava a semana/pasta selecionada, pra ela continuar marcada mesmo
 // depois de fechar e abrir o app de novo.
@@ -583,10 +601,6 @@ function persistCurrentWeek(){
 
 function saveWeeks(){
   localStorage.setItem('weekFolders', JSON.stringify(WEEKS));
-}
-
-function weekLabel(w){
-  return w ? w : 'Sem semana';
 }
 
 // Garante que toda semana já usada em algum sapato apareça na lista de
@@ -980,7 +994,7 @@ function render(){
         <div class="card-body">
           <div class="codigo">${g.codigo||'—'}</div>
           <div class="cor">${g.cor||''}</div>
-          ${currentWeek === 'todas' ? `<div class="week-tag-body">🗂 ${weekLabel(g.semana)}</div>` : ''}
+          ${(currentWeek === 'todas' && g.semana) ? `<div class="week-tag-body">🗂 ${g.semana}</div>` : ''}
           <div class="sizes-head">
             <span>Numerações</span>
             <span class="total-chip">${totalGroup}x total</span>
@@ -1005,7 +1019,7 @@ function render(){
   const totalPares = list.reduce((s,d)=> s + (Number(d.quantidade)||0), 0);
   countPill.textContent = totalItens + (totalItens===1 ? ' código' : ' códigos') + ' · ' + totalPares + (totalPares===1?' par':' pares');
   stampLabel.textContent = CAT_LABEL[currentCat].toUpperCase();
-  hSub.textContent = `${totalPares} par(es) a buscar` + (currentWeek === 'todas' ? ' nesta visão' : ` · ${weekLabel(currentWeek)}`);
+  hSub.textContent = `${totalPares} par(es) a buscar` + (currentWeek === 'todas' ? ' nesta visão' : ` · ${currentWeek}`);
 
   document.querySelectorAll('nav.tabs button').forEach(b=> b.classList.toggle('active', b.dataset.cat===currentCat));
   renderWeekBar();
@@ -1016,7 +1030,6 @@ const weekBar = document.getElementById('weekBar');
 function renderWeekBar(){
   const chips = [
     { value:'todas', label:'Todas' },
-    { value:'', label:'Sem semana' },
     ...WEEKS.map(w => ({ value:w, label:w }))
   ];
   weekBar.innerHTML = chips.map(c => `
@@ -1055,23 +1068,25 @@ const weekOverlay = document.getElementById('weekOverlay');
 const weekManageList = document.getElementById('weekManageList');
 
 function renderWeekManageList(){
-  const noWeekCount = DATA.filter(d => !d.semana).length;
-  const rows = [
-    { name:'', label:'Sem semana', count:noWeekCount, special:true },
-    ...WEEKS.map(w => ({ name:w, label:w, count: DATA.filter(d => (d.semana||'') === w).length, special:false }))
-  ];
-  weekManageList.innerHTML = rows.map(r => `
-    <div class="catalog-item stock-row">
-      <div class="info">
-        <div class="cod">${r.label}</div>
-        <div class="c">${r.count} numeração(ões)</div>
+  if(WEEKS.length === 0){
+    weekManageList.innerHTML = '<div class="catalog-empty">Nenhuma semana criada ainda.</div>';
+    return;
+  }
+  weekManageList.innerHTML = WEEKS.map(w => {
+    const count = DATA.filter(d => (d.semana||'') === w).length;
+    return `
+      <div class="catalog-item stock-row">
+        <div class="info">
+          <div class="cod">${w}</div>
+          <div class="c">${count} numeração(ões)</div>
+        </div>
+        <div class="stock-actions">
+          <button type="button" class="mini-btn icon-btn" data-renameweek="${w}" title="Renomear">✎</button>
+          <button type="button" class="mini-btn icon-btn" data-delweek="${w}" title="Excluir semana">🗑</button>
+        </div>
       </div>
-      <div class="stock-actions">
-        <button type="button" class="mini-btn icon-btn" data-renameweek="${r.name}" title="Renomear">✎</button>
-        ${r.special ? '' : `<button type="button" class="mini-btn icon-btn" data-delweek="${r.name}" title="Excluir semana">🗑</button>`}
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 document.getElementById('weekManageBtn').addEventListener('click', ()=>{
@@ -1090,31 +1105,19 @@ document.getElementById('weekAddBtn').addEventListener('click', ()=>{
 weekManageList.addEventListener('click', (e)=>{
   const renameBtn = e.target.closest('[data-renameweek]');
   if(renameBtn){
-    const oldName = renameBtn.dataset.renameweek; // '' = "Sem semana"
-    const isNoWeek = oldName === '';
-    const currentLabel = isNoWeek ? 'Sem semana' : oldName;
-    const newName = prompt(
-      isNoWeek
-        ? 'Nome da nova pasta pra onde os sapatos "Sem semana" vão:'
-        : `Novo nome para "${currentLabel}":`,
-      isNoWeek ? '' : oldName
-    );
+    const oldName = renameBtn.dataset.renameweek;
+    const newName = prompt(`Novo nome para "${oldName}":`, oldName);
     if(!newName) return;
     const trimmed = newName.trim();
-    if(!trimmed) return;
-    if(!isNoWeek && trimmed === oldName) return;
+    if(!trimmed || trimmed === oldName) return;
     if(WEEKS.includes(trimmed)){
       toast('Já existe uma semana com esse nome.');
       return;
     }
-
-    if(isNoWeek){
-      WEEKS.push(trimmed);
-    } else {
-      WEEKS = WEEKS.map(w => w === oldName ? trimmed : w);
-    }
+    WEEKS = WEEKS.map(w => w === oldName ? trimmed : w);
     saveWeeks();
-
+    // Isto só atualiza a etiqueta dos sapatos que já eram dessa semana —
+    // não move nada de uma semana para outra.
     DATA.filter(d => (d.semana||'') === oldName).forEach(item => {
       item.semana = trimmed;
       saveToDB(item);
@@ -1122,19 +1125,20 @@ weekManageList.addEventListener('click', (e)=>{
     if(currentWeek === oldName){ currentWeek = trimmed; persistCurrentWeek(); }
     renderWeekManageList();
     render();
-    toast(isNoWeek ? 'Pasta criada e sapatos movidos para ela.' : 'Semana renomeada.');
+    toast('Semana renomeada.');
     return;
   }
   const delBtn = e.target.closest('[data-delweek]');
   if(delBtn){
     const name = delBtn.dataset.delweek;
-    if(confirm(`Excluir a semana "${name}"?\n\nOs sapatos dela voltam para "Sem semana" — nada é apagado.`)){
+    const count = DATA.filter(d => (d.semana||'') === name).length;
+    if(count > 0){
+      toast(`Essa semana tem ${count} numeração(ões). Edite ou exclua esses sapatos primeiro.`);
+      return;
+    }
+    if(confirm(`Excluir a semana "${name}"? Ela está vazia.`)){
       WEEKS = WEEKS.filter(w => w !== name);
       saveWeeks();
-      DATA.filter(d => (d.semana||'') === name).forEach(item => {
-        item.semana = '';
-        saveToDB(item);
-      });
       if(currentWeek === name){ currentWeek = 'todas'; persistCurrentWeek(); }
       renderWeekManageList();
       render();
@@ -1265,14 +1269,62 @@ catChoice.addEventListener('click', (e)=>{
 
 function populateWeekSelect(selected){
   const sel = document.getElementById('fSemana');
-  const options = ['<option value="">Sem semana</option>']
-    .concat(WEEKS.map(w => `<option value="${w}">${w}</option>`));
-  sel.innerHTML = options.join('');
-  if(selected && !WEEKS.includes(selected)){
-    sel.insertAdjacentHTML('beforeend', `<option value="${selected}">${selected}</option>`);
+  let html = `<option value="" disabled ${!selected ? 'selected' : ''}>Selecione uma semana</option>`;
+  html += WEEKS.map(w => `<option value="${w}">${w}</option>`).join('');
+  html += '<option value="__new__">+ Nova semana...</option>';
+  sel.innerHTML = html;
+  if(selected && WEEKS.includes(selected)){
+    sel.value = selected;
   }
-  sel.value = selected || '';
 }
+
+document.getElementById('fSemana').addEventListener('change', function(){
+  if(this.value === '__new__'){
+    const created = addNewWeek();
+    populateWeekSelect(created || '');
+    renderWeekBar();
+  }
+});
+
+let sizeRowCounter = 0;
+const sizeRowsEl = document.getElementById('sizeRows');
+
+function addSizeRow(numVal, qtdVal){
+  const rid = 'r' + (sizeRowCounter++);
+  const div = document.createElement('div');
+  div.className = 'size-row-input';
+  div.dataset.rowid = rid;
+  div.innerHTML = `
+    <input type="number" class="row-num" placeholder="Nº (ex: 38)" value="${numVal ?? ''}">
+    <input type="number" class="row-qtd" min="0" placeholder="Qtd" value="${qtdVal ?? ''}">
+    <button type="button" class="row-remove" data-removerow="${rid}">✕</button>
+  `;
+  sizeRowsEl.appendChild(div);
+}
+
+// Recomeça a lista de numerações do formulário com uma linha em branco
+// (usado toda vez que se abre o formulário pra cadastrar sapato novo).
+function resetSizeRows(){
+  sizeRowsEl.innerHTML = '';
+  sizeRowCounter = 0;
+  addSizeRow();
+}
+
+document.getElementById('addSizeRowBtn').addEventListener('click', ()=> addSizeRow());
+
+sizeRowsEl.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-removerow]');
+  if(!btn) return;
+  const rows = sizeRowsEl.querySelectorAll('.size-row-input');
+  if(rows.length <= 1){
+    // Mantém sempre ao menos uma linha visível; só limpa os campos dela.
+    const row = btn.closest('.size-row-input');
+    row.querySelector('.row-num').value = '';
+    row.querySelector('.row-qtd').value = '';
+    return;
+  }
+  btn.closest('.size-row-input').remove();
+});
 
 function openForm(id, prefill){
   hideToast();
@@ -1285,6 +1337,8 @@ function openForm(id, prefill){
   document.getElementById('catalogSearch').value = '';
   hideCatalogResults();
   document.getElementById('catalogField').style.display = (id || (prefill && prefill.fromStock)) ? 'none' : '';
+  document.getElementById('singleSizeField').style.display = id ? '' : 'none';
+  document.getElementById('multiSizesField').style.display = id ? 'none' : '';
 
   if(id){
     const item = DATA.find(d=>d.id===id);
@@ -1303,13 +1357,14 @@ function openForm(id, prefill){
       document.getElementById('photoText').textContent = 'Toque para trocar a foto';
     }
   } else if(prefill){
-    document.getElementById('formTitle').textContent = `Nova numeração — ${prefill.codigo}`;
+    document.getElementById('formTitle').textContent = `Nova(s) numeração(ões) — ${prefill.codigo}`;
     itemForm.reset();
     document.getElementById('fCodigo').value = prefill.codigo || '';
     document.getElementById('fCor').value = prefill.cor || '';
     document.getElementById('fFechamento').checked = prefill.fechamento || false;
     selectedCat = prefill.categoria || 'basquete';
     populateWeekSelect(prefill.semana !== undefined ? prefill.semana : (currentWeek === 'todas' ? '' : currentWeek));
+    resetSizeRows();
     if(prefill.foto){
       photoDataUrl = prefill.foto;
       document.getElementById('photoPreview').src = prefill.foto;
@@ -1321,10 +1376,11 @@ function openForm(id, prefill){
     itemForm.reset();
     selectedCat = currentCat === 'todos' ? 'basquete' : currentCat;
     populateWeekSelect(currentWeek === 'todas' ? '' : currentWeek);
+    resetSizeRows();
   }
   [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
   overlay.classList.add('show');
-  if(prefill){ setTimeout(()=> document.getElementById('fNum').focus(), 150); }
+  if(prefill){ setTimeout(()=> sizeRowsEl.querySelector('.row-num')?.focus(), 150); }
 }
 
 function closeForm(){ overlay.classList.remove('show'); editingId = null; }
@@ -1549,20 +1605,17 @@ itemForm.addEventListener('submit', (e)=>{
   e.preventDefault();
   const codigo = document.getElementById('fCodigo').value.trim();
   const cor = document.getElementById('fCor').value.trim();
-  const numeracao = document.getElementById('fNum').value.trim();
-  const quantidade = document.getElementById('fQtd').value.trim();
   const fechamento = document.getElementById('fFechamento').checked;
   const semana = document.getElementById('fSemana').value;
 
   if(!codigo){ toast('Preencha ao menos o Código.'); return; }
+  if(!semana || semana === '__new__'){ toast('Escolha (ou crie) uma semana antes de salvar.'); return; }
   if(!CLOUD_MODE && !db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
 
-  const payload = {
+  const basePayload = {
     categoria: selectedCat,
     codigo,
     cor,
-    numeracao: numeracao === '' ? null : Number(numeracao),
-    quantidade: quantidade === '' ? null : Number(quantidade),
     foto: photoDataUrl,
     fechamento,
     semana
@@ -1570,6 +1623,14 @@ itemForm.addEventListener('submit', (e)=>{
 
   try{
     if(editingId){
+      const numeracao = document.getElementById('fNum').value.trim();
+      const quantidade = document.getElementById('fQtd').value.trim();
+      const payload = {
+        ...basePayload,
+        numeracao: numeracao === '' ? null : Number(numeracao),
+        quantidade: quantidade === '' ? null : Number(quantidade)
+      };
+
       const idx = DATA.findIndex(d=>d.id===editingId);
       const oldKey = groupKey(DATA[idx]);
       DATA[idx] = { ...DATA[idx], ...payload };
@@ -1586,11 +1647,32 @@ itemForm.addEventListener('submit', (e)=>{
       upsertCatalogFromItem(payload, codigo);
       toast('Sapato atualizado.');
     } else {
-      const newItem = { id: newId(), ...payload };
-      DATA.push(newItem);
-      saveToDB(newItem);
-      upsertCatalogFromItem(payload, codigo);
-      toast('Sapato adicionado à lista.');
+      // Cadastro novo: cada linha de numeração preenchida vira um item.
+      const rows = [...sizeRowsEl.querySelectorAll('.size-row-input')]
+        .map(row => ({
+          numeracaoStr: row.querySelector('.row-num').value.trim(),
+          quantidadeStr: row.querySelector('.row-qtd').value.trim()
+        }))
+        .filter(r => r.numeracaoStr !== '');
+
+      if(rows.length === 0){
+        toast('Adicione ao menos uma numeração.');
+        return;
+      }
+
+      rows.forEach(r => {
+        const newItem = {
+          id: newId(),
+          ...basePayload,
+          numeracao: Number(r.numeracaoStr),
+          quantidade: r.quantidadeStr === '' ? null : Number(r.quantidadeStr)
+        };
+        DATA.push(newItem);
+        saveToDB(newItem);
+      });
+
+      upsertCatalogFromItem(basePayload, codigo);
+      toast(rows.length === 1 ? 'Sapato adicionado à lista.' : `${rows.length} numerações adicionadas à lista.`);
     }
     closeForm();
     render();
