@@ -350,17 +350,20 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .week-chip.active{ background: var(--ink); border-color: var(--ink); color: var(--paper); }
 .week-chip.add{ border-style:dashed; }
 .week-manage-btn{
-  flex-shrink:0; width:34px; height:34px; border-radius:50%;
+  flex-shrink:0; white-space:nowrap;
+  padding:7px 12px; border-radius:20px;
   background: var(--card); border:1.5px solid var(--line); color: var(--ink-soft);
-  font-size:15px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-family:'JetBrains Mono',monospace; font-size:12.5px; font-weight:600;
+  cursor:pointer; display:flex; align-items:center; justify-content:center; gap:4px;
 }
+.week-manage-btn:hover{ border-color: var(--ink); color: var(--ink); }
 .week-tag-body{
   font-size:11.5px; color: var(--ink-soft); font-family:'JetBrains Mono',monospace;
   margin-top:1px;
 }
 @media(max-width:640px){
   .week-chip{ font-size:11px; padding:6px 10px; }
-  .week-manage-btn{ width:30px; height:30px; font-size:13px; }
+  .week-manage-btn{ font-size:11px; padding:6px 9px; }
   .week-tag-body{ font-size:10px; }
 }
 .mini-btn{
@@ -429,7 +432,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   </div>
   <div class="week-bar-wrap">
     <div class="week-bar" id="weekBar"></div>
-    <button class="week-manage-btn" id="weekManageBtn" title="Gerenciar semanas">⚙</button>
+    <button class="week-manage-btn" id="weekManageBtn" title="Renomear ou excluir semanas">⚙ Gerenciar</button>
   </div>
 </header>
 
@@ -558,7 +561,7 @@ let DATA = [];
 function newId(){
   return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('id_' + Date.now() + '_' + Math.random().toString(36).slice(2));
 }
-let currentCat = 'todos';
+let currentCat = localStorage.getItem('currentCat') || 'todos';
 let editingId = null;
 let photoDataUrl = "";
 let db;
@@ -570,7 +573,13 @@ let db;
 // ============================================================
 let WEEKS = [];
 try{ WEEKS = JSON.parse(localStorage.getItem('weekFolders') || '[]'); }catch(e){ WEEKS = []; }
-let currentWeek = 'todas';
+let currentWeek = localStorage.getItem('currentWeek') || 'todas';
+
+// Grava a semana/pasta selecionada, pra ela continuar marcada mesmo
+// depois de fechar e abrir o app de novo.
+function persistCurrentWeek(){
+  try{ localStorage.setItem('currentWeek', currentWeek); }catch(e){}
+}
 
 function saveWeeks(){
   localStorage.setItem('weekFolders', JSON.stringify(WEEKS));
@@ -998,6 +1007,7 @@ function render(){
   stampLabel.textContent = CAT_LABEL[currentCat].toUpperCase();
   hSub.textContent = `${totalPares} par(es) a buscar` + (currentWeek === 'todas' ? ' nesta visão' : ` · ${weekLabel(currentWeek)}`);
 
+  document.querySelectorAll('nav.tabs button').forEach(b=> b.classList.toggle('active', b.dataset.cat===currentCat));
   renderWeekBar();
 }
 
@@ -1030,12 +1040,13 @@ weekBar.addEventListener('click', (e)=>{
   const addBtn = e.target.closest('#weekAddChip');
   if(addBtn){
     const created = addNewWeek();
-    if(created){ currentWeek = created; render(); }
+    if(created){ currentWeek = created; persistCurrentWeek(); render(); }
     return;
   }
   const chip = e.target.closest('.week-chip[data-week]');
   if(chip){
     currentWeek = chip.dataset.week;
+    persistCurrentWeek();
     render();
   }
 });
@@ -1044,25 +1055,23 @@ const weekOverlay = document.getElementById('weekOverlay');
 const weekManageList = document.getElementById('weekManageList');
 
 function renderWeekManageList(){
-  if(WEEKS.length === 0){
-    weekManageList.innerHTML = '<div class="catalog-empty">Nenhuma semana criada ainda.</div>';
-    return;
-  }
-  weekManageList.innerHTML = WEEKS.map(w => {
-    const count = DATA.filter(d => (d.semana||'') === w).length;
-    return `
-      <div class="catalog-item stock-row">
-        <div class="info">
-          <div class="cod">${w}</div>
-          <div class="c">${count} numeração(ões)</div>
-        </div>
-        <div class="stock-actions">
-          <button type="button" class="mini-btn icon-btn" data-renameweek="${w}" title="Renomear">✎</button>
-          <button type="button" class="mini-btn icon-btn" data-delweek="${w}" title="Excluir semana">🗑</button>
-        </div>
+  const noWeekCount = DATA.filter(d => !d.semana).length;
+  const rows = [
+    { name:'', label:'Sem semana', count:noWeekCount, special:true },
+    ...WEEKS.map(w => ({ name:w, label:w, count: DATA.filter(d => (d.semana||'') === w).length, special:false }))
+  ];
+  weekManageList.innerHTML = rows.map(r => `
+    <div class="catalog-item stock-row">
+      <div class="info">
+        <div class="cod">${r.label}</div>
+        <div class="c">${r.count} numeração(ões)</div>
       </div>
-    `;
-  }).join('');
+      <div class="stock-actions">
+        <button type="button" class="mini-btn icon-btn" data-renameweek="${r.name}" title="Renomear">✎</button>
+        ${r.special ? '' : `<button type="button" class="mini-btn icon-btn" data-delweek="${r.name}" title="Excluir semana">🗑</button>`}
+      </div>
+    </div>
+  `).join('');
 }
 
 document.getElementById('weekManageBtn').addEventListener('click', ()=>{
@@ -1081,25 +1090,39 @@ document.getElementById('weekAddBtn').addEventListener('click', ()=>{
 weekManageList.addEventListener('click', (e)=>{
   const renameBtn = e.target.closest('[data-renameweek]');
   if(renameBtn){
-    const oldName = renameBtn.dataset.renameweek;
-    const newName = prompt('Novo nome para esta semana/pasta:', oldName);
+    const oldName = renameBtn.dataset.renameweek; // '' = "Sem semana"
+    const isNoWeek = oldName === '';
+    const currentLabel = isNoWeek ? 'Sem semana' : oldName;
+    const newName = prompt(
+      isNoWeek
+        ? 'Nome da nova pasta pra onde os sapatos "Sem semana" vão:'
+        : `Novo nome para "${currentLabel}":`,
+      isNoWeek ? '' : oldName
+    );
     if(!newName) return;
     const trimmed = newName.trim();
-    if(!trimmed || trimmed === oldName) return;
+    if(!trimmed) return;
+    if(!isNoWeek && trimmed === oldName) return;
     if(WEEKS.includes(trimmed)){
       toast('Já existe uma semana com esse nome.');
       return;
     }
-    WEEKS = WEEKS.map(w => w === oldName ? trimmed : w);
+
+    if(isNoWeek){
+      WEEKS.push(trimmed);
+    } else {
+      WEEKS = WEEKS.map(w => w === oldName ? trimmed : w);
+    }
     saveWeeks();
+
     DATA.filter(d => (d.semana||'') === oldName).forEach(item => {
       item.semana = trimmed;
       saveToDB(item);
     });
-    if(currentWeek === oldName) currentWeek = trimmed;
+    if(currentWeek === oldName){ currentWeek = trimmed; persistCurrentWeek(); }
     renderWeekManageList();
     render();
-    toast('Semana renomeada.');
+    toast(isNoWeek ? 'Pasta criada e sapatos movidos para ela.' : 'Semana renomeada.');
     return;
   }
   const delBtn = e.target.closest('[data-delweek]');
@@ -1112,7 +1135,7 @@ weekManageList.addEventListener('click', (e)=>{
         item.semana = '';
         saveToDB(item);
       });
-      if(currentWeek === name) currentWeek = 'todas';
+      if(currentWeek === name){ currentWeek = 'todas'; persistCurrentWeek(); }
       renderWeekManageList();
       render();
       toast('Semana excluída.');
@@ -1124,6 +1147,7 @@ const CAT_ORDER = ['todos','basquete','bota','plataforma'];
 
 function setCategory(cat, direction){
   currentCat = cat;
+  try{ localStorage.setItem('currentCat', cat); }catch(e){}
   document.querySelectorAll('nav.tabs button').forEach(b=> b.classList.toggle('active', b.dataset.cat===cat));
 
   if(direction){
