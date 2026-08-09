@@ -79,6 +79,8 @@ header{
 }
 .title-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; flex-wrap:wrap;}
 .brand{ display:flex; align-items:center; gap:10px; min-width:0;}
+.brand-icon{ width:34px; height:34px; border-radius:9px; flex-shrink:0; object-fit:cover;}
+@media(max-width:380px){ .brand-icon{ width:28px; height:28px; border-radius:7px; } }
 .stamp{
   font-family:'Bebas Neue', sans-serif;
   border: 2.5px solid var(--ink);
@@ -121,17 +123,12 @@ nav.tabs{
   gap:4px;
 }
 nav.tabs button{
-  flex:1; display:flex; flex-direction:column; align-items:center; gap:3px;
-  background:transparent; border:none; padding:8px 4px 6px; border-radius:10px;
-  font-family:'Space Grotesk', sans-serif; font-size:13px; font-weight:600;
+  flex:1; display:flex; align-items:center; justify-content:center;
+  background:transparent; border:none; padding:12px 4px; border-radius:10px;
+  font-family:'Space Grotesk', sans-serif; font-size:14px; font-weight:600;
   color: var(--ink-soft); cursor:pointer;
 }
-nav.tabs button.active{ background: var(--paper-2); color: var(--ink);}
-nav.tabs button .dot{ width:22px; height:22px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:13.5px;}
-nav.tabs button[data-cat="basquete"] .dot{ background: var(--c-basq-soft); color:var(--c-basq);}
-nav.tabs button[data-cat="bota"] .dot{ background: var(--c-bota-soft); color:var(--c-bota);}
-nav.tabs button[data-cat="plataforma"] .dot{ background: var(--c-plat-soft); color:var(--c-plat);}
-nav.tabs button[data-cat="todos"] .dot{ background: var(--paper-2); color:var(--ink);}
+nav.tabs button.active{ background: var(--total-bg); color: var(--total-text); font-weight:700;}
 
 main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hidden;}
 .grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap:8px; transition: opacity .16s ease, transform .16s ease;}
@@ -443,6 +440,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 <header>
   <div class="title-row">
     <div class="brand">
+      <img src="icon-192.png" alt="" class="brand-icon">
       <div class="stamp" id="stampLabel">TODOS</div>
       <div>
         <h1>Fechamento</h1>
@@ -475,10 +473,10 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 <button class="fab" id="fabAdd" aria-label="Adicionar sapato">+</button>
 
 <nav class="tabs">
-  <button data-cat="todos" class="active"><span class="dot">◆</span>Todos</button>
-  <button data-cat="basquete"><span class="dot">🏀</span>Basquete</button>
-  <button data-cat="bota"><span class="dot">👢</span>Bota</button>
-  <button data-cat="plataforma"><span class="dot">⬆</span>Plataforma</button>
+  <button data-cat="todos" class="active">Todos</button>
+  <button data-cat="basquete">Basquete</button>
+  <button data-cat="bota">Bota</button>
+  <button data-cat="plataforma">Plataforma</button>
 </nav>
 
 <div class="overlay" id="overlay">
