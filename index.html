@@ -184,7 +184,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   cursor:pointer; color: var(--ink);
 }
 .size-chip:hover{ background: var(--line);}
-.size-chip-label{ display:flex; flex-direction:column; line-height:1.25; white-space: nowrap;}
+.size-chip-label{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.25; white-space: nowrap; min-width:52px;}
 .size-chip-qtd{ font-size:11.5px; font-weight:500; color: var(--ink-soft);}
 .size-chip .x{
   width:18px; height:18px; border-radius:50%; background: var(--card);
@@ -234,6 +234,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   .sizes-head span{ font-size:9.5px; }
   .size-list{ gap:4px; }
   .size-chip{ font-size:12px; padding:4px 4px 4px 7px; gap:4px; border-radius:6px; }
+  .size-chip-label{ min-width:40px; }
   .size-chip .x{ width:15px; height:15px; font-size:10px; }
   .add-size-chip{ font-size:13px; padding:4px 8px; border-radius:6px; }
   .cat-tag{ font-size:9.5px; padding:1.5px 6px 0; top:6px; left:6px; }
@@ -532,6 +533,12 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
         <label class="field-checkbox">
           <input type="checkbox" id="fFechamento">
           Marcar como Fechamento ⚠️
+        </label>
+      </div>
+      <div class="field" id="addToStockField" style="margin-top: -10px; margin-bottom: 20px;">
+        <label class="field-checkbox">
+          <input type="checkbox" id="fAddToStock" checked>
+          Também salvar no Estoque 📦
         </label>
       </div>
       <div class="sheet-actions">
@@ -1413,6 +1420,7 @@ function openGroupEditForm(key){
   document.getElementById('catalogSearch').value = '';
   hideCatalogResults();
   document.getElementById('catalogField').style.display = 'none';
+  document.getElementById('addToStockField').style.display = 'none';
   document.getElementById('singleSizeField').style.display = 'none';
   document.getElementById('multiSizesField').style.display = '';
 
@@ -1450,9 +1458,11 @@ function openForm(id, prefill){
   document.getElementById('photoText').textContent = 'Toque para escolher uma foto';
   document.getElementById('photoFile').value = '';
   document.getElementById('fFechamento').checked = false;
+  document.getElementById('fAddToStock').checked = true;
   document.getElementById('catalogSearch').value = '';
   hideCatalogResults();
   document.getElementById('catalogField').style.display = (id || prefill) ? 'none' : '';
+  document.getElementById('addToStockField').style.display = (id || prefill) ? 'none' : '';
   document.getElementById('singleSizeField').style.display = id ? '' : 'none';
   document.getElementById('multiSizesField').style.display = id ? 'none' : '';
 
@@ -1852,7 +1862,9 @@ itemForm.addEventListener('submit', (e)=>{
         saveToDB(newItem);
       });
 
-      upsertCatalogFromItem(basePayload, codigo);
+      if(document.getElementById('fAddToStock').checked){
+        upsertCatalogFromItem(basePayload, codigo);
+      }
       toast(rows.length === 1 ? 'Sapato adicionado à lista.' : `${rows.length} numerações adicionadas à lista.`);
     }
     closeForm();
