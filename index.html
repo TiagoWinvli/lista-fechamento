@@ -416,6 +416,13 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 }
 .lightbox.show{ display:flex; }
 .lightbox img{ max-width:100%; max-height:100%; object-fit:contain; border-radius:8px; }
+.lightbox-close{
+  position:fixed; top: calc(14px + env(safe-area-inset-top)); right:14px; z-index:61;
+  width:40px; height:40px; border-radius:50%; border:none;
+  background: rgba(255,255,255,.15); color:#fff; font-size:20px; line-height:1;
+  display:flex; align-items:center; justify-content:center; cursor:pointer;
+}
+.lightbox-close:hover, .lightbox-close:active{ background: rgba(255,255,255,.3); }
 </style>
 </head>
 <body>
@@ -567,6 +574,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 </div>
 
 <div id="lightbox" class="lightbox">
+  <button type="button" class="lightbox-close" id="lightboxCloseBtn" aria-label="Fechar imagem">✕</button>
   <img id="lightboxImg" src="" alt="">
 </div>
 
@@ -1090,12 +1098,63 @@ function renderWeekManageList(){
   }).join('');
 }
 
+// ============================================================
+// HISTÓRICO DE OVERLAYS — faz o botão "voltar" do celular fechar
+// só a janela aberta (formulário, imagem, estoque, semanas) em vez
+// de sair do app inteiro. Toda vez que uma janela abre, empurramos
+// um estado no histórico do navegador; o listener de 'popstate'
+// (disparado pelo botão voltar) é quem realmente esconde a janela.
+// Os botões de fechar do próprio app (X, Cancelar, tocar fora) usam
+// closeOverlayHistory(), que só chama history.back() — assim os dois
+// caminhos (botão físico e botão do app) sempre passam pelo mesmo lugar.
+// ============================================================
+const OVERLAY_CLOSERS = {
+  overlay: hideForm,
+  weekOverlay: () => weekOverlay.classList.remove('show'),
+  stockOverlay: () => stockOverlay.classList.remove('show'),
+  lightbox: () => lightbox.classList.remove('show')
+};
+
+let overlayStack = [];
+
+function openOverlayHistory(name){
+  overlayStack.push(name);
+  history.pushState({ overlay: name }, '');
+}
+
+function closeOverlayHistory(name){
+  if(overlayStack.length && overlayStack[overlayStack.length - 1] === name){
+    history.back();
+  } else if(OVERLAY_CLOSERS[name]){
+    // segurança: se por algum motivo esse overlay não está no topo do
+    // histórico, ao menos esconde ele na tela.
+    OVERLAY_CLOSERS[name]();
+    overlayStack = overlayStack.filter(n => n !== name);
+  }
+}
+
+// Troca uma janela por outra sem empilhar um passo extra no histórico
+// (ex: fechar o Estoque e já abrir o formulário de cadastro por cima).
+function switchOverlay(fromName, openFn){
+  if(overlayStack.length && overlayStack[overlayStack.length - 1] === fromName){
+    overlayStack.pop();
+  }
+  if(OVERLAY_CLOSERS[fromName]) OVERLAY_CLOSERS[fromName]();
+  openFn();
+}
+
+window.addEventListener('popstate', ()=>{
+  const name = overlayStack.pop();
+  if(name && OVERLAY_CLOSERS[name]) OVERLAY_CLOSERS[name]();
+});
+
 document.getElementById('weekManageBtn').addEventListener('click', ()=>{
   renderWeekManageList();
   weekOverlay.classList.add('show');
+  openOverlayHistory('weekOverlay');
 });
-document.getElementById('weekOverlayCloseBtn').addEventListener('click', ()=> weekOverlay.classList.remove('show'));
-weekOverlay.addEventListener('click', (e)=>{ if(e.target === weekOverlay) weekOverlay.classList.remove('show'); });
+document.getElementById('weekOverlayCloseBtn').addEventListener('click', ()=> closeOverlayHistory('weekOverlay'));
+weekOverlay.addEventListener('click', (e)=>{ if(e.target === weekOverlay) closeOverlayHistory('weekOverlay'); });
 
 document.getElementById('weekAddBtn').addEventListener('click', ()=>{
   addNewWeek();
@@ -1179,6 +1238,7 @@ grid.addEventListener('click', (e)=>{
   if(photoImg){
     document.getElementById('lightboxImg').src = photoImg.src;
     document.getElementById('lightbox').classList.add('show');
+    openOverlayHistory('lightbox');
     return;
   }
 
@@ -1252,7 +1312,10 @@ grid.addEventListener('click', (e)=>{
 });
 
 const lightbox = document.getElementById('lightbox');
-lightbox.addEventListener('click', ()=> lightbox.classList.remove('show'));
+lightbox.addEventListener('click', (e)=>{
+  if(e.target === lightbox) closeOverlayHistory('lightbox');
+});
+document.getElementById('lightboxCloseBtn').addEventListener('click', ()=> closeOverlayHistory('lightbox'));
 
 const overlay = document.getElementById('overlay');
 const itemForm = document.getElementById('itemForm');
@@ -1367,6 +1430,7 @@ function openGroupEditForm(key){
 
   [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
   overlay.classList.add('show');
+  openOverlayHistory('overlay');
 }
 
 function openForm(id, prefill){
@@ -1424,10 +1488,21 @@ function openForm(id, prefill){
   }
   [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
   overlay.classList.add('show');
+  openOverlayHistory('overlay');
   if(prefill){ setTimeout(()=> sizeRowsEl.querySelector('.row-num')?.focus(), 150); }
 }
 
-function closeForm(){ overlay.classList.remove('show'); editingId = null; editingGroupKey = null; }
+// Esconde a janela do formulário e limpa o estado de edição. Esta é a
+// função "de verdade" que some com o overlay da tela — chamada tanto
+// pelo botão voltar do celular quanto pelos botões Cancelar/tocar fora
+// (através de closeForm/closeOverlayHistory, ver mais abaixo).
+function hideForm(){
+  overlay.classList.remove('show');
+  editingId = null;
+  editingGroupKey = null;
+}
+
+function closeForm(){ closeOverlayHistory('overlay'); }
 
 const catalogSearch = document.getElementById('catalogSearch');
 const catalogResults = document.getElementById('catalogResults');
@@ -1544,14 +1619,16 @@ document.getElementById('stockBtn').addEventListener('click', ()=>{
   [...stockCatFilter.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat==='todos'));
   renderStockList();
   stockOverlay.classList.add('show');
+  openOverlayHistory('stockOverlay');
 });
-document.getElementById('stockCloseBtn').addEventListener('click', ()=> stockOverlay.classList.remove('show'));
-stockOverlay.addEventListener('click', (e)=>{ if(e.target === stockOverlay) stockOverlay.classList.remove('show'); });
+document.getElementById('stockCloseBtn').addEventListener('click', ()=> closeOverlayHistory('stockOverlay'));
+stockOverlay.addEventListener('click', (e)=>{ if(e.target === stockOverlay) closeOverlayHistory('stockOverlay'); });
 
 document.getElementById('stockAddNewBtn').addEventListener('click', ()=>{
-  stockOverlay.classList.remove('show');
-  openForm(null, { categoria: stockCat === 'todos' ? 'basquete' : stockCat, codigo:'', cor:'', foto:'', fechamento:false, fromStock:true });
-  document.getElementById('formTitle').textContent = 'Novo cadastro no estoque';
+  switchOverlay('stockOverlay', ()=>{
+    openForm(null, { categoria: stockCat === 'todos' ? 'basquete' : stockCat, codigo:'', cor:'', foto:'', fechamento:false, fromStock:true });
+    document.getElementById('formTitle').textContent = 'Novo cadastro no estoque';
+  });
 });
 
 stockList.addEventListener('click', (e)=>{
@@ -1559,9 +1636,10 @@ stockList.addEventListener('click', (e)=>{
   if(addBtn){
     const g = CATALOG.find(c=>c.id===addBtn.dataset.addstock);
     if(g){
-      stockOverlay.classList.remove('show');
-      openForm(null, { categoria:g.categoria, codigo:g.codigo, cor:g.cor, foto:g.foto, fechamento:false, fromStock:true });
-      document.getElementById('formTitle').textContent = `Adicionar à lista — ${g.codigo}`;
+      switchOverlay('stockOverlay', ()=>{
+        openForm(null, { categoria:g.categoria, codigo:g.codigo, cor:g.cor, foto:g.foto, fechamento:false, fromStock:true });
+        document.getElementById('formTitle').textContent = `Adicionar à lista — ${g.codigo}`;
+      });
     }
     return;
   }
