@@ -1328,7 +1328,7 @@ grid.addEventListener('click', (e)=>{
     const key = delGroupBtn.dataset.delcode;
     const groupItems = DATA.filter(d => groupKey(d) === key);
     if(groupItems.length){
-      scheduleUndoDelete(groupItems, `${groupItems[0].codigo} removido da lista (segue salvo no 📦 Estoque).`);
+      scheduleUndoDelete(groupItems, `${groupItems[0].codigo} removido da lista.`);
     }
   }
 });
@@ -1812,7 +1812,6 @@ itemForm.addEventListener('submit', (e)=>{
         saveToDB(item);
       });
 
-      upsertCatalogFromItem(payload, codigo);
       toast('Sapato atualizado.');
     } else if(editingGroupKey){
       // Edição do card inteiro: compara a lista nova de numerações com a
@@ -1847,7 +1846,6 @@ itemForm.addEventListener('submit', (e)=>{
         saveToDB(item);
       });
 
-      upsertCatalogFromItem(basePayload, codigo);
       toast('Sapato atualizado.');
     } else {
       // Cadastro novo: cada numeração preenchida vira um item.
