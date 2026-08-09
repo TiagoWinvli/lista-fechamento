@@ -580,6 +580,7 @@ function newId(){
 }
 let currentCat = localStorage.getItem('currentCat') || 'todos';
 let editingId = null;
+let editingGroupKey = null;
 let photoDataUrl = "";
 let db;
 
@@ -1236,9 +1237,7 @@ grid.addEventListener('click', (e)=>{
 
   const editGroupBtn = e.target.closest('button.edit[data-editcode]');
   if(editGroupBtn){
-    const key = editGroupBtn.dataset.editcode;
-    const first = DATA.find(d => groupKey(d) === key);
-    if(first) openForm(first.id);
+    openGroupEditForm(editGroupBtn.dataset.editcode);
     return;
   }
 
@@ -1326,9 +1325,54 @@ sizeRowsEl.addEventListener('click', (e)=>{
   btn.closest('.size-row-input').remove();
 });
 
+// Abre o formulário pra editar TODAS as numerações de um card de uma vez
+// (usado pelo botão ✎ Editar), em vez de só a primeira numeração.
+function openGroupEditForm(key){
+  const rows = DATA.filter(d => groupKey(d) === key);
+  if(!rows.length) return;
+  const first = rows[0];
+
+  hideToast();
+  editingId = null;
+  editingGroupKey = key;
+  photoDataUrl = "";
+  document.getElementById('photoPreview').style.display='none';
+  document.getElementById('photoText').textContent = 'Toque para escolher uma foto';
+  document.getElementById('photoFile').value = '';
+  document.getElementById('catalogSearch').value = '';
+  hideCatalogResults();
+  document.getElementById('catalogField').style.display = 'none';
+  document.getElementById('singleSizeField').style.display = 'none';
+  document.getElementById('multiSizesField').style.display = '';
+
+  document.getElementById('formTitle').textContent = `Editar sapato — ${first.codigo}`;
+  document.getElementById('fCodigo').value = first.codigo || '';
+  document.getElementById('fCor').value = first.cor || '';
+  document.getElementById('fFechamento').checked = first.fechamento || false;
+  selectedCat = first.categoria;
+  populateWeekSelect(first.semana || '');
+
+  sizeRowsEl.innerHTML = '';
+  sizeRowCounter = 0;
+  rows
+    .sort((a,b)=> (Number(a.numeracao)||0) - (Number(b.numeracao)||0))
+    .forEach(r => addSizeRow(r.numeracao, r.quantidade));
+
+  if(first.foto){
+    photoDataUrl = first.foto;
+    document.getElementById('photoPreview').src = first.foto;
+    document.getElementById('photoPreview').style.display = 'block';
+    document.getElementById('photoText').textContent = 'Toque para trocar a foto';
+  }
+
+  [...catChoice.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat===selectedCat));
+  overlay.classList.add('show');
+}
+
 function openForm(id, prefill){
   hideToast();
   editingId = id || null;
+  editingGroupKey = null;
   photoDataUrl = "";
   document.getElementById('photoPreview').style.display='none';
   document.getElementById('photoText').textContent = 'Toque para escolher uma foto';
@@ -1336,7 +1380,7 @@ function openForm(id, prefill){
   document.getElementById('fFechamento').checked = false;
   document.getElementById('catalogSearch').value = '';
   hideCatalogResults();
-  document.getElementById('catalogField').style.display = (id || (prefill && prefill.fromStock)) ? 'none' : '';
+  document.getElementById('catalogField').style.display = (id || prefill) ? 'none' : '';
   document.getElementById('singleSizeField').style.display = id ? '' : 'none';
   document.getElementById('multiSizesField').style.display = id ? 'none' : '';
 
@@ -1374,7 +1418,7 @@ function openForm(id, prefill){
   } else {
     document.getElementById('formTitle').textContent = 'Adicionar sapato';
     itemForm.reset();
-    selectedCat = currentCat === 'todos' ? 'basquete' : currentCat;
+    selectedCat = null;
     populateWeekSelect(currentWeek === 'todas' ? '' : currentWeek);
     resetSizeRows();
   }
@@ -1383,7 +1427,7 @@ function openForm(id, prefill){
   if(prefill){ setTimeout(()=> sizeRowsEl.querySelector('.row-num')?.focus(), 150); }
 }
 
-function closeForm(){ overlay.classList.remove('show'); editingId = null; }
+function closeForm(){ overlay.classList.remove('show'); editingId = null; editingGroupKey = null; }
 
 const catalogSearch = document.getElementById('catalogSearch');
 const catalogResults = document.getElementById('catalogResults');
@@ -1431,7 +1475,7 @@ function renderCatalogResults(term){
         }
         catalogSearch.value = `${g.codigo} — usando cadastro existente`;
         hideCatalogResults();
-        document.getElementById('fNum').focus();
+        sizeRowsEl.querySelector('.row-num')?.focus();
       });
       catalogResults.appendChild(div);
     });
@@ -1608,6 +1652,7 @@ itemForm.addEventListener('submit', (e)=>{
   const fechamento = document.getElementById('fFechamento').checked;
   const semana = document.getElementById('fSemana').value;
 
+  if(!selectedCat){ toast('Selecione a categoria: Basquete, Bota ou Plataforma.'); return; }
   if(!codigo){ toast('Preencha ao menos o Código.'); return; }
   if(!semana || semana === '__new__'){ toast('Escolha (ou crie) uma semana antes de salvar.'); return; }
   if(!CLOUD_MODE && !db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
@@ -1620,6 +1665,26 @@ itemForm.addEventListener('submit', (e)=>{
     fechamento,
     semana
   };
+
+  // Lê as linhas de numeração preenchidas, juntando (somando quantidade)
+  // caso o mesmo número tenha sido digitado em mais de uma linha.
+  function readMergedSizeRows(){
+    const merged = new Map();
+    [...sizeRowsEl.querySelectorAll('.size-row-input')].forEach(row => {
+      const numStr = row.querySelector('.row-num').value.trim();
+      const qtdStr = row.querySelector('.row-qtd').value.trim();
+      if(numStr === '') return;
+      const num = Number(numStr);
+      const qtd = qtdStr === '' ? null : Number(qtdStr);
+      if(merged.has(num)){
+        const prev = merged.get(num);
+        merged.set(num, prev === null && qtd === null ? null : (prev||0) + (qtd||0));
+      } else {
+        merged.set(num, qtd);
+      }
+    });
+    return [...merged.entries()].map(([numeracao, quantidade]) => ({ numeracao, quantidade }));
+  }
 
   try{
     if(editingId){
@@ -1646,14 +1711,44 @@ itemForm.addEventListener('submit', (e)=>{
 
       upsertCatalogFromItem(payload, codigo);
       toast('Sapato atualizado.');
+    } else if(editingGroupKey){
+      // Edição do card inteiro: compara a lista nova de numerações com a
+      // antiga, atualiza as que continuam, cria as novas e remove as que
+      // foram tiradas do formulário.
+      const oldRows = DATA.filter(d => groupKey(d) === editingGroupKey);
+      const newRows = readMergedSizeRows();
+
+      if(newRows.length === 0){
+        toast('Adicione ao menos uma numeração.');
+        return;
+      }
+
+      const usedOldIds = new Set();
+      const finalItems = newRows.map(r => {
+        const match = oldRows.find(o => !usedOldIds.has(o.id) && Number(o.numeracao) === r.numeracao);
+        if(match){
+          usedOldIds.add(match.id);
+          return { ...match, ...basePayload, numeracao: r.numeracao, quantidade: r.quantidade };
+        }
+        return { id: newId(), ...basePayload, numeracao: r.numeracao, quantidade: r.quantidade, jaFechado: false };
+      });
+
+      oldRows.filter(o => !usedOldIds.has(o.id)).forEach(o => {
+        DATA = DATA.filter(d => d.id !== o.id);
+        deleteFromDB(o.id);
+      });
+
+      finalItems.forEach(item => {
+        const idx = DATA.findIndex(d => d.id === item.id);
+        if(idx >= 0) DATA[idx] = item; else DATA.push(item);
+        saveToDB(item);
+      });
+
+      upsertCatalogFromItem(basePayload, codigo);
+      toast('Sapato atualizado.');
     } else {
-      // Cadastro novo: cada linha de numeração preenchida vira um item.
-      const rows = [...sizeRowsEl.querySelectorAll('.size-row-input')]
-        .map(row => ({
-          numeracaoStr: row.querySelector('.row-num').value.trim(),
-          quantidadeStr: row.querySelector('.row-qtd').value.trim()
-        }))
-        .filter(r => r.numeracaoStr !== '');
+      // Cadastro novo: cada numeração preenchida vira um item.
+      const rows = readMergedSizeRows();
 
       if(rows.length === 0){
         toast('Adicione ao menos uma numeração.');
@@ -1664,8 +1759,8 @@ itemForm.addEventListener('submit', (e)=>{
         const newItem = {
           id: newId(),
           ...basePayload,
-          numeracao: Number(r.numeracaoStr),
-          quantidade: r.quantidadeStr === '' ? null : Number(r.quantidadeStr)
+          numeracao: r.numeracao,
+          quantidade: r.quantidade
         };
         DATA.push(newItem);
         saveToDB(newItem);
