@@ -193,6 +193,8 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 }
 .size-chip:hover{ background: var(--line);}
 .size-chip-label{ display:flex; flex-direction:column; align-items:flex-start; line-height:1.25; white-space: nowrap; min-width:52px;}
+.size-chip-obs{ font-size:10px; font-weight:700; max-width:120px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+.size-chip.has-obs{ border-left-width:4px; border-left-style:solid; padding-left:8px; }
 .size-chip-qtd{ font-size:11.5px; font-weight:500; color: var(--ink-soft);}
 .size-chip .x{
   width:18px; height:18px; border-radius:50%; background: var(--card);
@@ -349,6 +351,20 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   display:flex; align-items:center; justify-content:center;
 }
 .size-row-input .row-remove:hover{ background: var(--danger); color:#fff; border-color:var(--danger); }
+.row-note-wrap{ display:flex; align-items:center; gap:8px; margin:-4px 0 10px 0; }
+.row-note-wrap input{
+  flex:1; min-width:0; background: var(--card); border:1.5px solid var(--line); border-radius:8px;
+  padding: 8px 10px; font-family:'Space Grotesk',sans-serif; font-size:13.5px; color: var(--ink); outline:none;
+}
+.row-note-wrap input:focus{ border-color: var(--ink); }
+.color-swatches{ display:flex; gap:5px; flex-shrink:0; }
+.swatch{
+  width:22px; height:22px; border-radius:50%; border:1.5px solid var(--line);
+  cursor:pointer; padding:0; background: var(--card); position:relative;
+}
+.swatch[data-color=""]{ background: var(--card); }
+.swatch[data-color=""]::after{ content:'✕'; position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--ink-soft); }
+.swatch.sel{ border-color: var(--ink); border-width:2.5px; }
 .sheet-actions{ display:flex; gap:10px; margin-top:6px;}
 .btn{
   flex:1; border:none; border-radius:10px; padding:14px; font-family:'Space Grotesk',sans-serif;
@@ -533,6 +549,13 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
           <input type="number" id="fQtd" min="0" placeholder="ex: 1">
         </div>
       </div>
+      <div class="field" id="singleObsField">
+        <label>Comentário (opcional)</label>
+        <div class="row-note-wrap" style="margin:0;">
+          <input type="text" id="fObs" placeholder="ex: separar pra cliente X">
+          <div class="color-swatches" id="fObsColorSwatches"></div>
+        </div>
+      </div>
       <div class="field" id="multiSizesField">
         <label>Numerações e quantidades</label>
         <div id="sizeRows"></div>
@@ -587,6 +610,18 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
     <div class="sheet-actions" style="margin-top:14px;">
       <button type="button" class="btn btn-secondary" id="stockCloseBtn">Fechar</button>
       <button type="button" class="btn btn-primary" id="stockAddNewBtn">+ Novo no estoque</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="confirmOverlay">
+  <div class="sheet" style="max-width:400px;">
+    <div class="sheet-handle"></div>
+    <h2 id="confirmTitle">Confirmar</h2>
+    <p id="confirmMessage" style="color:var(--ink-soft); font-size:14.5px; line-height:1.5; margin:0 0 18px;"></p>
+    <div class="sheet-actions">
+      <button type="button" class="btn btn-secondary" id="confirmCancelBtn">Cancelar</button>
+      <button type="button" class="btn btn-primary" id="confirmOkBtn" style="background:var(--danger);">Confirmar</button>
     </div>
   </div>
 </div>
@@ -701,7 +736,9 @@ function itemToRow(item){
     foto: item.foto || '',
     fechamento: !!item.fechamento,
     ja_fechado: !!item.jaFechado,
-    semana: item.semana || ''
+    semana: item.semana || '',
+    obs: item.obs || '',
+    obs_color: item.obsColor || ''
   };
 }
 function rowToItem(row){
@@ -715,7 +752,9 @@ function rowToItem(row){
     foto: row.foto || '',
     fechamento: !!row.fechamento,
     jaFechado: !!row.ja_fechado,
-    semana: row.semana || ''
+    semana: row.semana || '',
+    obs: row.obs || '',
+    obsColor: row.obs_color || ''
   };
 }
 
@@ -885,6 +924,27 @@ function upsertCatalogFromItem(payload, codigo){
 
 const CAT_LABEL = { basquete:"Basquete", bota:"Bota", plataforma:"Plataforma", todos:"Todos" };
 const CAT_ORDER_INDEX = { basquete:0, bota:1, plataforma:2 };
+
+// Paleta de cores usada pra destacar comentários em numerações específicas.
+const OBS_COLORS = ['#f2c94c', '#eb5757', '#27ae60', '#2f80ed', '#9b51e0'];
+
+function buildColorSwatches(container, selected, onSelect){
+  container.innerHTML = '';
+  const options = ['', ...OBS_COLORS];
+  options.forEach(color => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'swatch' + (color === (selected||'') ? ' sel' : '');
+    btn.dataset.color = color;
+    if(color) btn.style.background = color;
+    btn.addEventListener('click', ()=>{
+      [...container.children].forEach(c => c.classList.remove('sel'));
+      btn.classList.add('sel');
+      onSelect(color);
+    });
+    container.appendChild(btn);
+  });
+}
 const main = document.querySelector('main');
 const grid = document.getElementById('grid');
 const searchInput = document.getElementById('searchInput');
@@ -1008,8 +1068,12 @@ function render(){
       const sizeChips = g.rows
         .sort((a,b)=> (Number(a.numeracao)||0) - (Number(b.numeracao)||0))
         .map(r => `
-          <span class="size-chip ${r.jaFechado ? 'done' : ''}" data-editid="${r.id}">
-            <span class="size-chip-label"><span class="size-chip-num">Nº${r.numeracao ?? '—'}</span><span class="size-chip-qtd">${parLabel(r.quantidade)}</span></span>
+          <span class="size-chip ${r.jaFechado ? 'done' : ''} ${r.obsColor ? 'has-obs' : ''}" data-editid="${r.id}" ${r.obsColor ? `style="border-left-color:${r.obsColor}"` : ''} ${r.obs ? `title="${r.obs.replace(/"/g,'&quot;')}"` : ''}>
+            <span class="size-chip-label">
+              <span class="size-chip-num">Nº${r.numeracao ?? '—'}</span>
+              <span class="size-chip-qtd">${parLabel(r.quantidade)}</span>
+              ${r.obs ? `<span class="size-chip-obs" style="color:${r.obsColor || 'var(--ink-soft)'}">💬 ${r.obs}</span>` : ''}
+            </span>
             <span class="check" data-checkid="${r.id}" title="${r.jaFechado ? 'Já fechado' : 'Marcar como já fechado'}">${r.jaFechado ? '✓' : ''}</span>
             <span class="x" data-delid="${r.id}">✕</span>
           </span>
@@ -1134,7 +1198,11 @@ const OVERLAY_CLOSERS = {
   overlay: hideForm,
   weekOverlay: () => weekOverlay.classList.remove('show'),
   stockOverlay: () => stockOverlay.classList.remove('show'),
-  lightbox: () => lightbox.classList.remove('show')
+  lightbox: () => lightbox.classList.remove('show'),
+  confirmOverlay: () => {
+    confirmOverlay.classList.remove('show');
+    if(confirmResolve){ const r = confirmResolve; confirmResolve = null; r(confirmPendingResult); }
+  }
 };
 
 let overlayStack = [];
@@ -1218,14 +1286,15 @@ weekManageList.addEventListener('click', (e)=>{
       toast(`Essa semana tem ${count} numeração(ões). Edite ou exclua esses sapatos primeiro.`);
       return;
     }
-    if(confirm(`Excluir a semana "${name}"? Ela está vazia.`)){
+    showConfirm(`Ela está vazia e será excluída da lista de semanas.`, `Excluir a semana "${name}"?`).then(ok=>{
+      if(!ok) return;
       WEEKS = WEEKS.filter(w => w !== name);
       saveWeeks();
       if(currentWeek === name){ currentWeek = 'todas'; persistCurrentWeek(); }
       renderWeekManageList();
       render();
       toast('Semana excluída.');
-    }
+    });
   }
 });
 
@@ -1339,10 +1408,40 @@ lightbox.addEventListener('click', (e)=>{
 });
 document.getElementById('lightboxCloseBtn').addEventListener('click', ()=> closeOverlayHistory('lightbox'));
 
+// ============================================================
+// CONFIRMAÇÃO CUSTOMIZADA — substitui o confirm() nativo do navegador
+// (feio e trava a tela) por um sheet no mesmo estilo visual do app.
+// Uso: showConfirm('mensagem', 'Título opcional').then(ok => { if(ok){...} });
+// ============================================================
+const confirmOverlay = document.getElementById('confirmOverlay');
+const confirmTitle = document.getElementById('confirmTitle');
+const confirmMessage = document.getElementById('confirmMessage');
+const confirmOkBtn = document.getElementById('confirmOkBtn');
+const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+let confirmResolve = null;
+let confirmPendingResult = false;
+
+function showConfirm(message, title){
+  return new Promise(resolve => {
+    confirmTitle.textContent = title || 'Confirmar';
+    confirmMessage.textContent = message;
+    confirmResolve = resolve;
+    confirmPendingResult = false;
+    confirmOverlay.classList.add('show');
+    openOverlayHistory('confirmOverlay');
+  });
+}
+
+confirmOkBtn.addEventListener('click', ()=>{ confirmPendingResult = true; closeOverlayHistory('confirmOverlay'); });
+confirmCancelBtn.addEventListener('click', ()=>{ confirmPendingResult = false; closeOverlayHistory('confirmOverlay'); });
+confirmOverlay.addEventListener('click', (e)=>{ if(e.target === confirmOverlay){ confirmPendingResult = false; closeOverlayHistory('confirmOverlay'); } });
+
 const overlay = document.getElementById('overlay');
 const itemForm = document.getElementById('itemForm');
 const catChoice = document.getElementById('catChoice');
 let selectedCat = 'basquete';
+let selectedObsColor = '';
+const fObsColorSwatchesEl = document.getElementById('fObsColorSwatches');
 
 catChoice.addEventListener('click', (e)=>{
   const btn = e.target.closest('button');
@@ -1373,17 +1472,37 @@ document.getElementById('fSemana').addEventListener('change', function(){
 let sizeRowCounter = 0;
 const sizeRowsEl = document.getElementById('sizeRows');
 
-function addSizeRow(numVal, qtdVal){
+function addSizeRow(numVal, qtdVal, obsVal, colorVal){
   const rid = 'r' + (sizeRowCounter++);
-  const div = document.createElement('div');
-  div.className = 'size-row-input';
-  div.dataset.rowid = rid;
-  div.innerHTML = `
+  const group = document.createElement('div');
+  group.className = 'size-row-group';
+  group.dataset.rowid = rid;
+  group.dataset.color = colorVal || '';
+
+  const row = document.createElement('div');
+  row.className = 'size-row-input';
+  row.innerHTML = `
     <input type="number" class="row-num" placeholder="Nº (ex: 38)" value="${numVal ?? ''}">
     <input type="number" class="row-qtd" min="0" placeholder="Qtd" value="${qtdVal ?? ''}">
     <button type="button" class="row-remove" data-removerow="${rid}">✕</button>
   `;
-  sizeRowsEl.appendChild(div);
+
+  const noteWrap = document.createElement('div');
+  noteWrap.className = 'row-note-wrap';
+  const noteInput = document.createElement('input');
+  noteInput.type = 'text';
+  noteInput.className = 'row-note';
+  noteInput.placeholder = 'Comentário (opcional)';
+  noteInput.value = obsVal || '';
+  const swatchesDiv = document.createElement('div');
+  swatchesDiv.className = 'color-swatches';
+  buildColorSwatches(swatchesDiv, colorVal || '', (c)=>{ group.dataset.color = c; });
+  noteWrap.appendChild(noteInput);
+  noteWrap.appendChild(swatchesDiv);
+
+  group.appendChild(row);
+  group.appendChild(noteWrap);
+  sizeRowsEl.appendChild(group);
 }
 
 // Recomeça a lista de numerações do formulário com uma linha em branco
@@ -1399,15 +1518,18 @@ document.getElementById('addSizeRowBtn').addEventListener('click', ()=> addSizeR
 sizeRowsEl.addEventListener('click', (e)=>{
   const btn = e.target.closest('[data-removerow]');
   if(!btn) return;
-  const rows = sizeRowsEl.querySelectorAll('.size-row-input');
-  if(rows.length <= 1){
+  const groups = sizeRowsEl.querySelectorAll('.size-row-group');
+  if(groups.length <= 1){
     // Mantém sempre ao menos uma linha visível; só limpa os campos dela.
-    const row = btn.closest('.size-row-input');
-    row.querySelector('.row-num').value = '';
-    row.querySelector('.row-qtd').value = '';
+    const group = btn.closest('.size-row-group');
+    group.querySelector('.row-num').value = '';
+    group.querySelector('.row-qtd').value = '';
+    group.querySelector('.row-note').value = '';
+    group.dataset.color = '';
+    buildColorSwatches(group.querySelector('.color-swatches'), '', (c)=>{ group.dataset.color = c; });
     return;
   }
-  btn.closest('.size-row-input').remove();
+  btn.closest('.size-row-group').remove();
 });
 
 // Abre o formulário pra editar TODAS as numerações de um card de uma vez
@@ -1442,7 +1564,7 @@ function openGroupEditForm(key){
   sizeRowCounter = 0;
   rows
     .sort((a,b)=> (Number(a.numeracao)||0) - (Number(b.numeracao)||0))
-    .forEach(r => addSizeRow(r.numeracao, r.quantidade));
+    .forEach(r => addSizeRow(r.numeracao, r.quantidade, r.obs, r.obsColor));
 
   if(first.foto){
     photoDataUrl = first.foto;
@@ -1471,6 +1593,7 @@ function openForm(id, prefill){
   document.getElementById('catalogField').style.display = (id || prefill) ? 'none' : '';
   document.getElementById('addToStockField').style.display = (id || prefill) ? 'none' : '';
   document.getElementById('singleSizeField').style.display = id ? '' : 'none';
+  document.getElementById('singleObsField').style.display = id ? '' : 'none';
   document.getElementById('multiSizesField').style.display = id ? 'none' : '';
 
   if(id){
@@ -1480,6 +1603,9 @@ function openForm(id, prefill){
     document.getElementById('fCor').value = item.cor || '';
     document.getElementById('fNum').value = item.numeracao ?? '';
     document.getElementById('fQtd').value = item.quantidade ?? '';
+    document.getElementById('fObs').value = item.obs || '';
+    selectedObsColor = item.obsColor || '';
+    buildColorSwatches(fObsColorSwatchesEl, selectedObsColor, (c)=>{ selectedObsColor = c; });
     document.getElementById('fFechamento').checked = item.fechamento || false;
     selectedCat = item.categoria;
     populateWeekSelect(item.semana || '');
@@ -1671,10 +1797,13 @@ stockList.addEventListener('click', (e)=>{
   const delBtn = e.target.closest('[data-delstock]');
   if(delBtn){
     const g = CATALOG.find(c=>c.id===delBtn.dataset.delstock);
-    if(g && confirm(`Excluir ${g.codigo} do estoque?\n\nIsso NÃO remove numerações que já estejam na sua lista de compras — só apaga o cadastro para busca futura.`)){
-      deleteCatalogEntry(g.id);
-      renderStockList();
-      toast('Removido do estoque.');
+    if(g){
+      showConfirm('Isso NÃO remove numerações que já estejam na sua lista de compras — só apaga o cadastro para busca futura.', `Excluir ${g.codigo} do estoque?`).then(ok=>{
+        if(!ok) return;
+        deleteCatalogEntry(g.id);
+        renderStockList();
+        toast('Removido do estoque.');
+      });
     }
   }
 });
@@ -1773,20 +1902,26 @@ itemForm.addEventListener('submit', (e)=>{
   // caso o mesmo número tenha sido digitado em mais de uma linha.
   function readMergedSizeRows(){
     const merged = new Map();
-    [...sizeRowsEl.querySelectorAll('.size-row-input')].forEach(row => {
-      const numStr = row.querySelector('.row-num').value.trim();
-      const qtdStr = row.querySelector('.row-qtd').value.trim();
+    [...sizeRowsEl.querySelectorAll('.size-row-group')].forEach(group => {
+      const numStr = group.querySelector('.row-num').value.trim();
+      const qtdStr = group.querySelector('.row-qtd').value.trim();
+      const obs = group.querySelector('.row-note').value.trim();
+      const obsColor = group.dataset.color || '';
       if(numStr === '') return;
       const num = Number(numStr);
       const qtd = qtdStr === '' ? null : Number(qtdStr);
       if(merged.has(num)){
         const prev = merged.get(num);
-        merged.set(num, prev === null && qtd === null ? null : (prev||0) + (qtd||0));
+        merged.set(num, {
+          quantidade: prev.quantidade === null && qtd === null ? null : (prev.quantidade||0) + (qtd||0),
+          obs: obs || prev.obs,
+          obsColor: obsColor || prev.obsColor
+        });
       } else {
-        merged.set(num, qtd);
+        merged.set(num, { quantidade: qtd, obs, obsColor });
       }
     });
-    return [...merged.entries()].map(([numeracao, quantidade]) => ({ numeracao, quantidade }));
+    return [...merged.entries()].map(([numeracao, v]) => ({ numeracao, quantidade: v.quantidade, obs: v.obs, obsColor: v.obsColor }));
   }
 
   try{
@@ -1796,7 +1931,9 @@ itemForm.addEventListener('submit', (e)=>{
       const payload = {
         ...basePayload,
         numeracao: numeracao === '' ? null : Number(numeracao),
-        quantidade: quantidade === '' ? null : Number(quantidade)
+        quantidade: quantidade === '' ? null : Number(quantidade),
+        obs: document.getElementById('fObs').value.trim(),
+        obsColor: selectedObsColor
       };
 
       const idx = DATA.findIndex(d=>d.id===editingId);
@@ -1830,9 +1967,9 @@ itemForm.addEventListener('submit', (e)=>{
         const match = oldRows.find(o => !usedOldIds.has(o.id) && Number(o.numeracao) === r.numeracao);
         if(match){
           usedOldIds.add(match.id);
-          return { ...match, ...basePayload, numeracao: r.numeracao, quantidade: r.quantidade };
+          return { ...match, ...basePayload, numeracao: r.numeracao, quantidade: r.quantidade, obs: r.obs, obsColor: r.obsColor };
         }
-        return { id: newId(), ...basePayload, numeracao: r.numeracao, quantidade: r.quantidade, jaFechado: false };
+        return { id: newId(), ...basePayload, numeracao: r.numeracao, quantidade: r.quantidade, obs: r.obs, obsColor: r.obsColor, jaFechado: false };
       });
 
       oldRows.filter(o => !usedOldIds.has(o.id)).forEach(o => {
@@ -1861,7 +1998,9 @@ itemForm.addEventListener('submit', (e)=>{
           id: newId(),
           ...basePayload,
           numeracao: r.numeracao,
-          quantidade: r.quantidade
+          quantidade: r.quantidade,
+          obs: r.obs,
+          obsColor: r.obsColor
         };
         DATA.push(newItem);
         saveToDB(newItem);
@@ -1880,12 +2019,13 @@ itemForm.addEventListener('submit', (e)=>{
 });
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify(DATA, null, 2)], {type:'application/json'});
+  const backup = { shoes: DATA, catalog: CATALOG };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url; a.download = 'lista_compras_calcados.json'; a.click();
   URL.revokeObjectURL(url);
-  toast('Arquivo exportado.');
+  toast('Arquivo exportado (lista + estoque).');
 });
 
 document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
@@ -1896,9 +2036,19 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
   reader.onload = (evt)=>{
     try{
       const imported = JSON.parse(evt.target.result);
-      if(!Array.isArray(imported)) throw new Error('formato inválido');
+      let importedShoes, importedCatalog = null;
+      if(Array.isArray(imported)){
+        // Formato antigo: um array só com a lista de compras.
+        importedShoes = imported;
+      } else if(imported && Array.isArray(imported.shoes)){
+        // Formato novo: { shoes: [...], catalog: [...] }
+        importedShoes = imported.shoes;
+        importedCatalog = Array.isArray(imported.catalog) ? imported.catalog : null;
+      } else {
+        throw new Error('formato inválido');
+      }
 
-      const newData = imported.map(d => ({
+      const newData = importedShoes.map(d => ({
         id: newId(),
         categoria: d.categoria || 'basquete',
         codigo: d.codigo || '',
@@ -1908,21 +2058,36 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
         foto: d.foto || '',
         fechamento: d.fechamento || false,
         jaFechado: d.jaFechado || false,
-        semana: d.semana || ''
+        semana: d.semana || '',
+        obs: d.obs || '',
+        obsColor: d.obsColor || ''
       }));
+
+      const newCatalog = importedCatalog ? importedCatalog.map(c => ({
+        id: catalogKey(c.categoria, c.codigo),
+        categoria: c.categoria || 'basquete',
+        codigo: c.codigo || '',
+        cor: c.cor || '',
+        foto: c.foto || ''
+      })) : null;
 
       const finishImport = () => {
         DATA = newData;
-        const seen = {};
-        DATA.forEach(item => {
-          const key = catalogKey(item.categoria, item.codigo);
-          if(!seen[key]){
-            seen[key] = true;
-            upsertCatalogFromItem(item, item.codigo);
-          }
-        });
+        if(newCatalog){
+          CATALOG = newCatalog;
+        } else {
+          // Backup antigo sem estoque: deriva o cadastro a partir dos itens importados.
+          const seen = {};
+          DATA.forEach(item => {
+            const key = catalogKey(item.categoria, item.codigo);
+            if(!seen[key]){
+              seen[key] = true;
+              upsertCatalogFromItem(item, item.codigo);
+            }
+          });
+        }
         render();
-        toast('Lista importada com sucesso.');
+        toast(newCatalog ? 'Lista e estoque importados com sucesso.' : 'Lista importada com sucesso.');
       };
 
       if(CLOUD_MODE){
@@ -1933,15 +2098,34 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
           Promise.resolve(cleanup).then(()=>{
             supa.from('shoes').insert(newData.map(itemToRow)).then(({error})=>{
               if(error){ toast('Erro ao importar na nuvem: ' + error.message); return; }
-              finishImport();
+              if(newCatalog){
+                supa.from('catalog').select('id').then(({data:catIds})=>{
+                  const cids = (catIds||[]).map(r=>r.id);
+                  const cleanupCat = cids.length ? supa.from('catalog').delete().in('id', cids) : Promise.resolve({error:null});
+                  Promise.resolve(cleanupCat).then(()=>{
+                    supa.from('catalog').insert(newCatalog).then(({error})=>{
+                      if(error){ toast('Erro ao importar estoque na nuvem: ' + error.message); return; }
+                      finishImport();
+                    });
+                  });
+                });
+              } else {
+                finishImport();
+              }
             });
           });
         });
       } else {
-        const tx = db.transaction('shoes', 'readwrite');
-        const store = tx.objectStore('shoes');
-        store.clear();
-        newData.forEach(item => store.put(item));
+        const stores = newCatalog ? ['shoes','catalog'] : ['shoes'];
+        const tx = db.transaction(stores, 'readwrite');
+        const shoesStore = tx.objectStore('shoes');
+        shoesStore.clear();
+        newData.forEach(item => shoesStore.put(item));
+        if(newCatalog){
+          const catalogStore = tx.objectStore('catalog');
+          catalogStore.clear();
+          newCatalog.forEach(entry => catalogStore.put(entry));
+        }
         tx.oncomplete = finishImport;
       }
     }catch(err){ toast('Erro ao importar: ' + err.message); }
