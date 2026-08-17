@@ -1939,6 +1939,7 @@ itemForm.addEventListener('submit', (e)=>{
       const idx = DATA.findIndex(d=>d.id===editingId);
       const oldKey = groupKey(DATA[idx]);
       DATA[idx] = { ...DATA[idx], ...payload };
+      saveToDB(DATA[idx]);
 
       // Propaga fechamento/foto/semana pra todas as numerações que estavam
       // no mesmo card (mesmo código, categoria e semana de antes da edição).
@@ -1985,7 +1986,9 @@ itemForm.addEventListener('submit', (e)=>{
 
       toast('Sapato atualizado.');
     } else {
-      // Cadastro novo: cada numeração preenchida vira um item.
+      // Cadastro novo: cada numeração preenchida vira um item — ou, se já
+      // existir essa mesma numeração no card (mesmo código/categoria/semana),
+      // soma a quantidade nela em vez de criar um item duplicado.
       const rows = readMergedSizeRows();
 
       if(rows.length === 0){
@@ -1993,23 +1996,49 @@ itemForm.addEventListener('submit', (e)=>{
         return;
       }
 
+      const targetGroupKey = groupKey({ categoria: selectedCat, codigo, semana });
+      let addedCount = 0;
+      let mergedCount = 0;
+
       rows.forEach(r => {
-        const newItem = {
-          id: newId(),
-          ...basePayload,
-          numeracao: r.numeracao,
-          quantidade: r.quantidade,
-          obs: r.obs,
-          obsColor: r.obsColor
-        };
-        DATA.push(newItem);
-        saveToDB(newItem);
+        const existing = DATA.find(d => groupKey(d) === targetGroupKey && Number(d.numeracao) === Number(r.numeracao));
+        if(existing){
+          existing.quantidade = (Number(existing.quantidade)||0) + (Number(r.quantidade)||0);
+          if(r.obs) existing.obs = r.obs;
+          if(r.obsColor) existing.obsColor = r.obsColor;
+          if(basePayload.foto) existing.foto = basePayload.foto;
+          if(basePayload.cor) existing.cor = basePayload.cor;
+          existing.fechamento = basePayload.fechamento;
+          saveToDB(existing);
+          mergedCount++;
+        } else {
+          const newItem = {
+            id: newId(),
+            ...basePayload,
+            numeracao: r.numeracao,
+            quantidade: r.quantidade,
+            obs: r.obs,
+            obsColor: r.obsColor
+          };
+          DATA.push(newItem);
+          saveToDB(newItem);
+          addedCount++;
+        }
       });
 
       if(document.getElementById('fAddToStock').checked){
         upsertCatalogFromItem(basePayload, codigo);
       }
-      toast(rows.length === 1 ? 'Sapato adicionado à lista.' : `${rows.length} numerações adicionadas à lista.`);
+
+      let msg;
+      if(mergedCount > 0 && addedCount === 0){
+        msg = mergedCount === 1 ? 'Quantidade somada na numeração já existente.' : `${mergedCount} numerações somadas às já existentes.`;
+      } else if(mergedCount > 0 && addedCount > 0){
+        msg = `${addedCount} numeração(ões) nova(s) adicionada(s) e ${mergedCount} somada(s) às existentes.`;
+      } else {
+        msg = rows.length === 1 ? 'Sapato adicionado à lista.' : `${rows.length} numerações adicionadas à lista.`;
+      }
+      toast(msg);
     }
     closeForm();
     render();
