@@ -542,7 +542,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
       <div class="field-row" id="singleSizeField">
         <div class="field">
           <label>Numeração</label>
-          <input type="number" id="fNum" placeholder="ex: 38">
+          <input type="number" id="fNum" step="any" inputmode="decimal" placeholder="ex: 38 ou 4.5">
         </div>
         <div class="field">
           <label>Quantidade que preciso</label>
@@ -1483,7 +1483,7 @@ function addSizeRow(numVal, qtdVal, obsVal, colorVal){
   const row = document.createElement('div');
   row.className = 'size-row-input';
   row.innerHTML = `
-    <input type="number" class="row-num" placeholder="Nº (ex: 38)" value="${numVal ?? ''}">
+    <input type="number" class="row-num" step="any" inputmode="decimal" placeholder="Nº (ex: 38 ou 4.5)" value="${numVal ?? ''}">
     <input type="number" class="row-qtd" min="0" placeholder="Qtd" value="${qtdVal ?? ''}">
     <button type="button" class="row-remove" data-removerow="${rid}">✕</button>
   `;
