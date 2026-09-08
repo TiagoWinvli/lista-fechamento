@@ -184,7 +184,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .sizes-head{ display:flex; justify-content:space-between; align-items:center; margin-top:8px; margin-bottom:5px; gap:6px; flex-wrap:wrap;}
 .sizes-head span:first-child{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
 .sizes-head span{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color: var(--ink-soft); font-weight:600;}
-.size-list{ display:flex; flex-wrap:wrap; gap:6px; flex:1;}
+.size-list{ display:flex; flex-wrap:wrap; gap:6px; flex:1; align-content:flex-start; align-items:flex-start;}
 .size-chip{
   display:flex; align-items:center; gap:6px;
   font-family:'JetBrains Mono', monospace; font-size:14px; font-weight:600;
@@ -209,7 +209,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   background: transparent; border: 1.5px dashed var(--line); border-radius:7px;
   padding:5px 11px; cursor:pointer; color: var(--ink-soft);
 }
-.size-list .add-size-chip{ flex-basis:100%; justify-content:flex-start; }
+.size-list .add-size-chip{ flex-basis:100%; justify-content:center; padding:11px 14px; min-height:40px; margin-top:2px; }
 .add-size-chip:hover{ border-color: var(--ink); color: var(--ink);}
 .card-actions{ display:flex; border-top:1.5px solid var(--line); }
 .card-actions button{
@@ -415,11 +415,6 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   display:flex; align-items:center; justify-content:center; gap:12px;
 }
 #toast.show{ transform: translateX(-50%) translateY(0); opacity:1; pointer-events:auto;}
-.toast-undo-btn{
-  background: var(--paper); color: var(--ink); border:none; border-radius:20px;
-  padding:6px 14px; font-family:'Space Grotesk',sans-serif; font-weight:700; font-size:13px;
-  cursor:pointer; flex-shrink:0; white-space:nowrap;
-}
 
 .photo{ cursor:pointer; }
 .photo .zoom-hint{
@@ -957,39 +952,12 @@ function hideToast(){
   t.classList.remove('show');
 }
 
-// Toast com botão "Desfazer" — usado depois de excluir, dando alguns
-// segundos pra reverter antes do toast sumir.
-function showUndoToast(msg, onUndo){
-  const t = document.getElementById('toast');
-  clearTimeout(t._timer);
-  t.innerHTML = '';
-  const span = document.createElement('span');
-  span.textContent = msg;
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'toast-undo-btn';
-  btn.textContent = 'Desfazer';
-  btn.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    onUndo();
-  });
-  t.appendChild(span);
-  t.appendChild(btn);
-  t.classList.add('show');
-  t._timer = setTimeout(()=> t.classList.remove('show'), 5000);
-}
-
-// Remove os itens da lista de compras imediatamente (com toast de "Desfazer"),
-// mas mantém tudo pronto pra restaurar caso o usuário se arrependa.
-function scheduleUndoDelete(items, message){
+// Remove os itens da lista de compras (chamado só depois de confirmação).
+function deleteItems(items, message){
   DATA = DATA.filter(d => !items.some(it => it.id === d.id));
   items.forEach(item => deleteFromDB(item.id));
   render();
-  showUndoToast(message, ()=>{
-    items.forEach(item => { DATA.push(item); saveToDB(item); });
-    render();
-    hideToast();
-  });
+  toast(message);
 }
 
 function iconFor(cat){ return {basquete:'🏀', bota:'👢', plataforma:'⬆'}[cat] || '👟'; }
@@ -1330,7 +1298,10 @@ grid.addEventListener('click', (e)=>{
     const id = xBtn.dataset.delid;
     const item = DATA.find(d=>d.id===id);
     if(item){
-      scheduleUndoDelete([item], `Nº ${item.numeracao ?? '—'} removido de ${item.codigo}.`);
+      showConfirm(`Nº ${item.numeracao ?? '—'} de ${item.codigo} será removido da lista.`, 'Excluir essa numeração?').then(ok=>{
+        if(!ok) return;
+        deleteItems([item], `Nº ${item.numeracao ?? '—'} removido de ${item.codigo}.`);
+      });
     }
     return;
   }
@@ -1377,7 +1348,15 @@ grid.addEventListener('click', (e)=>{
     const key = delGroupBtn.dataset.delcode;
     const groupItems = DATA.filter(d => groupKey(d) === key);
     if(groupItems.length){
-      scheduleUndoDelete(groupItems, `${groupItems[0].codigo} removido da lista.`);
+      const totalPares = groupItems.reduce((s,d)=> s + (Number(d.quantidade)||0), 0);
+      const qtdNum = groupItems.length;
+      showConfirm(
+        `${groupItems[0].codigo} e ${qtdNum === 1 ? 'sua numeração' : `todas as ${qtdNum} numerações`} (${totalPares === 1 ? '1 par' : totalPares + ' pares'}) serão removidos da lista.`,
+        'Excluir esse sapato?'
+      ).then(ok=>{
+        if(!ok) return;
+        deleteItems(groupItems, `${groupItems[0].codigo} removido da lista.`);
+      });
     }
   }
 });
@@ -2033,7 +2012,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = 'lista_compras_calcados.json'; a.click();
+  a.href = url; a.download = 'fechamento.json'; a.click();
   URL.revokeObjectURL(url);
   toast('Arquivo exportado (lista + estoque).');
 });
