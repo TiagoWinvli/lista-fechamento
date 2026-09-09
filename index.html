@@ -149,6 +149,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   display:flex; flex-direction:column;
   transition: transform .1s, border-color .2s;
   -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
+  touch-action:none;
 }
 .card.fechamento{ border: 2px solid var(--fechamento); box-shadow: 0 0 8px rgba(217, 114, 12, 0.3); }
 .card:active{ transform: scale(.98);}
@@ -1341,27 +1342,41 @@ grid.addEventListener('pointerdown', (e)=>{
   if(e.target.closest('button, input, .size-chip, .add-size-chip')) return;
 
   const startX = e.clientX, startY = e.clientY;
+  let lastY = startY;
+  let scrolling = false;
   const pointerId = e.pointerId;
 
   clearTimeout(longPressTimer);
   longPressTimer = setTimeout(()=>{
-    grid.removeEventListener('pointermove', cancelIfMoved);
+    cleanup();
     startDrag(card, pointerId, startX, startY);
   }, LONG_PRESS_MS);
 
-  function cancelIfMoved(moveEvent){
-    if(Math.abs(moveEvent.clientX - startX) > MOVE_CANCEL_PX || Math.abs(moveEvent.clientY - startY) > MOVE_CANCEL_PX){
+  // Como o card tem touch-action:none (necessário pro toque longo não
+  // ser confundido com rolagem da página pelo navegador), se o gesto na
+  // verdade for um deslize rápido (não uma parada segurando), rolamos a
+  // página manualmente aqui — repondo a rolagem que o navegador deixou
+  // de fazer sozinho.
+  function preDragMove(moveEvent){
+    if(moveEvent.pointerId !== pointerId) return;
+    const dx = moveEvent.clientX - startX;
+    const dy = moveEvent.clientY - startY;
+    if(!scrolling && (Math.abs(dx) > MOVE_CANCEL_PX || Math.abs(dy) > MOVE_CANCEL_PX)){
       clearTimeout(longPressTimer);
-      cleanup();
+      scrolling = true;
     }
+    if(scrolling){
+      window.scrollBy(0, lastY - moveEvent.clientY);
+    }
+    lastY = moveEvent.clientY;
   }
   function clearOnUp(){ clearTimeout(longPressTimer); cleanup(); }
   function cleanup(){
-    grid.removeEventListener('pointermove', cancelIfMoved);
+    grid.removeEventListener('pointermove', preDragMove);
     grid.removeEventListener('pointerup', clearOnUp);
     grid.removeEventListener('pointercancel', clearOnUp);
   }
-  grid.addEventListener('pointermove', cancelIfMoved);
+  grid.addEventListener('pointermove', preDragMove);
   grid.addEventListener('pointerup', clearOnUp);
   grid.addEventListener('pointercancel', clearOnUp);
 });
