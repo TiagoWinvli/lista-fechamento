@@ -148,9 +148,20 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   position:relative;
   display:flex; flex-direction:column;
   transition: transform .1s, border-color .2s;
+  -webkit-touch-callout:none; -webkit-user-select:none; user-select:none;
 }
 .card.fechamento{ border: 2px solid var(--fechamento); box-shadow: 0 0 8px rgba(217, 114, 12, 0.3); }
 .card:active{ transform: scale(.98);}
+.card.dragging-card{
+  position:fixed; z-index:100; margin:0; touch-action:none;
+  box-shadow: 0 14px 30px rgba(0,0,0,.4);
+  transform: scale(1.05) rotate(-1deg);
+  transition: box-shadow .15s ease;
+  cursor:grabbing;
+}
+.card-placeholder{
+  background: transparent; border: 2px dashed var(--line); box-shadow:none;
+}
 .photo{
   aspect-ratio: 1/1; width:100%;
   background: var(--paper-2);
@@ -631,6 +642,15 @@ function newId(){
   return (window.crypto && crypto.randomUUID) ? crypto.randomUUID() : ('id_' + Date.now() + '_' + Math.random().toString(36).slice(2));
 }
 let currentCat = localStorage.getItem('currentCat') || 'todos';
+
+// Ordem manual dos cards (arrastar e soltar, tipo ícones de app na tela
+// inicial do celular). Guarda a sequência de "chaves" de card (categoria
+// + código + semana) na ordem que o usuário escolheu.
+let CARD_ORDER = [];
+try{ CARD_ORDER = JSON.parse(localStorage.getItem('cardOrder') || '[]'); }catch(e){ CARD_ORDER = []; }
+function saveCardOrder(){
+  try{ localStorage.setItem('cardOrder', JSON.stringify(CARD_ORDER)); }catch(e){}
+}
 let editingId = null;
 let editingGroupKey = null;
 let photoDataUrl = "";
@@ -1017,8 +1037,17 @@ function render(){
   }
 
   const groups = groupItems(list).sort((a,b) => {
-    // Fechamento tem prioridade máxima: vai para o começo da fila
-    // independentemente da categoria (basquete, bota ou plataforma).
+    const ai = CARD_ORDER.indexOf(a.key);
+    const bi = CARD_ORDER.indexOf(b.key);
+    if(ai !== -1 || bi !== -1){
+      // Cards que o usuário já reorganizou manualmente vêm primeiro,
+      // respeitando a posição em que ele os deixou.
+      if(ai === -1) return 1;
+      if(bi === -1) return -1;
+      return ai - bi;
+    }
+    // Sem ordem manual ainda pra esses dois: Fechamento tem prioridade
+    // máxima, depois a ordem padrão de categoria.
     if(a.fechamento !== b.fechamento) return a.fechamento ? -1 : 1;
     return (CAT_ORDER_INDEX[a.categoria] ?? 99) - (CAT_ORDER_INDEX[b.categoria] ?? 99);
   });
@@ -1045,6 +1074,7 @@ function render(){
 
       const el = document.createElement('div');
       el.className = `card ${g.fechamento ? 'fechamento' : ''}`;
+      el.dataset.groupkey = g.key;
       el.innerHTML = `
         <div class="photo">
           <div class="fechamento-badge">⚠️</div>
@@ -1288,7 +1318,128 @@ document.querySelectorAll('nav.tabs button').forEach(btn=>{
 
 searchInput.addEventListener('input', render);
 
+// ============================================================
+// REORDENAR CARDS — pressione e segure um card (fora dos botões/chips)
+// pra arrastá-lo pra outra posição, como os ícones de app na tela
+// inicial do celular. Funciona com toque e mouse (Pointer Events).
+// A ordem escolhida é salva no navegador e passa a valer sempre que
+// esse card aparecer (em qualquer aba/semana), até o usuário arrastar
+// de novo.
+// ============================================================
+const LONG_PRESS_MS = 420;
+const MOVE_CANCEL_PX = 10;
+let dragState = null;
+let longPressTimer = null;
+let suppressNextClick = false;
+
+grid.addEventListener('pointerdown', (e)=>{
+  if(e.pointerType === 'mouse' && e.button !== 0) return;
+  const card = e.target.closest('.card');
+  if(!card || card.classList.contains('card-placeholder')) return;
+  // Não inicia o arraste em cima de botões, chips ou campos — só na
+  // "área livre" do card (foto, código, cor etc.).
+  if(e.target.closest('button, input, .size-chip, .add-size-chip')) return;
+
+  const startX = e.clientX, startY = e.clientY;
+  const pointerId = e.pointerId;
+
+  clearTimeout(longPressTimer);
+  longPressTimer = setTimeout(()=>{
+    grid.removeEventListener('pointermove', cancelIfMoved);
+    startDrag(card, pointerId, startX, startY);
+  }, LONG_PRESS_MS);
+
+  function cancelIfMoved(moveEvent){
+    if(Math.abs(moveEvent.clientX - startX) > MOVE_CANCEL_PX || Math.abs(moveEvent.clientY - startY) > MOVE_CANCEL_PX){
+      clearTimeout(longPressTimer);
+      cleanup();
+    }
+  }
+  function clearOnUp(){ clearTimeout(longPressTimer); cleanup(); }
+  function cleanup(){
+    grid.removeEventListener('pointermove', cancelIfMoved);
+    grid.removeEventListener('pointerup', clearOnUp);
+    grid.removeEventListener('pointercancel', clearOnUp);
+  }
+  grid.addEventListener('pointermove', cancelIfMoved);
+  grid.addEventListener('pointerup', clearOnUp);
+  grid.addEventListener('pointercancel', clearOnUp);
+});
+
+function startDrag(card, pointerId, startX, startY){
+  const rect = card.getBoundingClientRect();
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'card card-placeholder';
+  card.parentNode.insertBefore(placeholder, card.nextSibling);
+
+  dragState = { pointerId, card, placeholder, offsetX: startX - rect.left, offsetY: startY - rect.top };
+
+  card.style.width = rect.width + 'px';
+  card.style.height = rect.height + 'px';
+  card.style.left = rect.left + 'px';
+  card.style.top = rect.top + 'px';
+  card.classList.add('dragging-card');
+
+  try{ card.setPointerCapture(pointerId); }catch(err){}
+  if(navigator.vibrate) navigator.vibrate(25);
+
+  card.addEventListener('pointermove', onDragMove);
+  card.addEventListener('pointerup', onDragEnd);
+  card.addEventListener('pointercancel', onDragEnd);
+
+  suppressNextClick = true;
+}
+
+function onDragMove(e){
+  if(!dragState || e.pointerId !== dragState.pointerId) return;
+  e.preventDefault();
+  const { card, offsetX, offsetY, placeholder } = dragState;
+  card.style.left = (e.clientX - offsetX) + 'px';
+  card.style.top = (e.clientY - offsetY) + 'px';
+
+  card.style.visibility = 'hidden';
+  const elUnder = document.elementFromPoint(e.clientX, e.clientY);
+  card.style.visibility = '';
+  const target = elUnder ? elUnder.closest('.card') : null;
+  if(target && target !== card && target !== placeholder && grid.contains(target)){
+    const children = [...grid.children];
+    const phIndex = children.indexOf(placeholder);
+    const targetIndex = children.indexOf(target);
+    if(targetIndex < phIndex){
+      grid.insertBefore(placeholder, target);
+    } else {
+      grid.insertBefore(placeholder, target.nextSibling);
+    }
+  }
+}
+
+function onDragEnd(e){
+  if(!dragState || e.pointerId !== dragState.pointerId) return;
+  const { card, placeholder, pointerId } = dragState;
+  try{ card.releasePointerCapture(pointerId); }catch(err){}
+  card.removeEventListener('pointermove', onDragMove);
+  card.removeEventListener('pointerup', onDragEnd);
+  card.removeEventListener('pointercancel', onDragEnd);
+
+  placeholder.parentNode.insertBefore(card, placeholder);
+  placeholder.remove();
+  card.classList.remove('dragging-card');
+  card.style.position = '';
+  card.style.left = '';
+  card.style.top = '';
+  card.style.width = '';
+  card.style.height = '';
+
+  CARD_ORDER = [...grid.querySelectorAll('.card[data-groupkey]')].map(c => c.dataset.groupkey);
+  saveCardOrder();
+
+  dragState = null;
+  setTimeout(()=>{ suppressNextClick = false; }, 80);
+}
+
 grid.addEventListener('click', (e)=>{
+  if(suppressNextClick){ suppressNextClick = false; return; }
   const photoImg = e.target.closest('.photo img');
   if(photoImg){
     document.getElementById('lightboxImg').src = photoImg.src;
