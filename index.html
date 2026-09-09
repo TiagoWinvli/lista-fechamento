@@ -1384,9 +1384,9 @@ function startDrag(card, pointerId, startX, startY){
   try{ card.setPointerCapture(pointerId); }catch(err){}
   if(navigator.vibrate) navigator.vibrate(25);
 
-  card.addEventListener('pointermove', onDragMove);
-  card.addEventListener('pointerup', onDragEnd);
-  card.addEventListener('pointercancel', onDragEnd);
+  document.addEventListener('pointermove', onDragMove);
+  document.addEventListener('pointerup', onDragEnd);
+  document.addEventListener('pointercancel', onDragEnd);
 
   suppressNextClick = true;
 }
@@ -1418,9 +1418,9 @@ function onDragEnd(e){
   if(!dragState || e.pointerId !== dragState.pointerId) return;
   const { card, placeholder, pointerId } = dragState;
   try{ card.releasePointerCapture(pointerId); }catch(err){}
-  card.removeEventListener('pointermove', onDragMove);
-  card.removeEventListener('pointerup', onDragEnd);
-  card.removeEventListener('pointercancel', onDragEnd);
+  document.removeEventListener('pointermove', onDragMove);
+  document.removeEventListener('pointerup', onDragEnd);
+  document.removeEventListener('pointercancel', onDragEnd);
 
   placeholder.parentNode.insertBefore(card, placeholder);
   placeholder.remove();
