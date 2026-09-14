@@ -7,7 +7,7 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#211d18">
+<meta name="theme-color" content="#121212">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Fechamento">
@@ -18,27 +18,6 @@
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{
-  --paper: #f2ede2;
-  --paper-2: #e9e1d0;
-  --ink: #211d18;
-  --ink-soft: #5c5346;
-  --line: #d8cdb6;
-  --card: #fffdf8;
-
-  --c-basq: #33459c;
-  --c-basq-soft: #e4e7f7;
-  --c-bota: #2f7d3c;
-  --c-bota-soft: #e0f2e3;
-  --c-plat: #7c3aed;
-  --c-plat-soft: #ede4fc;
-  --total-bg: #ece3fa;
-  --total-text: #5a3d99;
-
-  --danger: #b3402f;
-  --fechamento: #d9720c;
-}
-
-body.dark-mode {
   --paper: #121212;
   --paper-2: #1e1e1e;
   --ink: #f0f0f0;
@@ -54,6 +33,8 @@ body.dark-mode {
   --c-plat-soft: #3a2a4d;
   --total-bg: #322a47;
   --total-text: #cbb6f5;
+
+  --danger: #b3402f;
   --fechamento: #ffa733;
 }
 
@@ -475,10 +456,8 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
     <input type="text" id="searchInput" placeholder="Buscar por código, cor ou comentário...">
   </div>
   <div class="topbar-actions">
-    <button class="mini-btn icon-btn" id="themeToggle">🌓</button>
     <button class="mini-btn" id="stockBtn">📦 Estoque</button>
-    <button class="mini-btn" id="exportBtn">⬇ Exportar</button>
-    <button class="mini-btn" id="importBtn">⬆ Importar</button>
+    <button class="mini-btn icon-btn" id="settingsBtn" title="Configurações">⚙</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
   </div>
   <div class="week-bar-wrap">
@@ -618,6 +597,23 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   </div>
 </div>
 
+<div class="overlay" id="settingsOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2>⚙ Configurações</h2>
+    <div class="field">
+      <label>Backup</label>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <button type="button" class="mini-btn" id="exportBtn" style="padding:12px;">⬇ Exportar JSON (lista + estoque)</button>
+        <button type="button" class="mini-btn" id="importBtn" style="padding:12px;">⬆ Importar JSON</button>
+      </div>
+    </div>
+    <div class="sheet-actions" style="margin-top:6px;">
+      <button type="button" class="btn btn-secondary" id="settingsCloseBtn">Fechar</button>
+    </div>
+  </div>
+</div>
+
 <div class="overlay overlay-center" id="confirmOverlay">
   <div class="sheet confirm-dialog" style="max-width:400px;">
     <h2 id="confirmTitle">Confirmar</h2>
@@ -694,14 +690,6 @@ function syncWeeksFromData(){
 function groupKey(item){
   return item.categoria + '|' + (item.codigo||'').trim().toUpperCase() + '|' + (item.semana||'');
 }
-
-if(localStorage.getItem('theme') === 'dark'){
-  document.body.classList.add('dark-mode');
-}
-document.getElementById('themeToggle').addEventListener('click', () => {
-  document.body.classList.toggle('dark-mode');
-  localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-});
 
 const initialData = [{"id": 1, "categoria": "basquete", "codigo": "CT00010007", "cor": "Preto/Vermelho", "numeracao": 41, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 2, "categoria": "basquete", "codigo": "CT35240002", "cor": "Vinho/Preto/Branco", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 3, "categoria": "basquete", "codigo": "CT34120004", "cor": "Terra Molhada Preto/Branco", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 4, "categoria": "basquete", "codigo": "CT04200003", "cor": "Verde Oliva Preto/Branco", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 5, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 6, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 7, "categoria": "basquete", "codigo": "CT00010008", "cor": "Bordo/Preto/Branco", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 8, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 35, "quantidade": 5, "foto": "", "fechamento": false}, {"id": 9, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 36, "quantidade": 3, "foto": "", "fechamento": false}, {"id": 10, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 37, "quantidade": 4, "foto": "", "fechamento": false}, {"id": 11, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 38, "quantidade": 8, "foto": "", "fechamento": false}, {"id": 12, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 39, "quantidade": 3, "foto": "", "fechamento": false}, {"id": 13, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 40, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 14, "categoria": "basquete", "codigo": "CT00010001", "cor": "Branco/Marinho", "numeracao": 41, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 15, "categoria": "basquete", "codigo": "CT33510003", "cor": "Café com Leite/Amêndoa", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 16, "categoria": "basquete", "codigo": "CT33510003", "cor": "Café com Leite/Amêndoa", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 17, "categoria": "basquete", "codigo": "CT35060003", "cor": "Marrom Ferrugem/Marfim", "numeracao": 33, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 18, "categoria": "basquete", "codigo": "CT35060003", "cor": "Marrom Ferrugem/Marfim", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 19, "categoria": "basquete", "codigo": "CT35060004", "cor": "Ouro Enferrujado", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 20, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 21, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 22, "categoria": "basquete", "codigo": "CT35060002", "cor": "Castanha Clara/Marfim", "numeracao": 38, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 23, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 24, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 36, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 25, "categoria": "basquete", "codigo": "CT04460002", "cor": "Preto/Preto", "numeracao": 37, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 26, "categoria": "bota", "codigo": "CK16050002", "cor": "Rosa Creme/Ouro Claro", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 27, "categoria": "bota", "codigo": "CT34990001", "cor": "Castanha Clara/Ouro Claro", "numeracao": 36, "quantidade": 2, "foto": "", "fechamento": false}, {"id": 28, "categoria": "bota", "codigo": "CT04510001", "cor": "Branco/Vermelho", "numeracao": 35, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 29, "categoria": "bota", "codigo": "CT04510001", "cor": "Branco/Vermelho", "numeracao": 36, "quantidade": 1, "foto": "", "fechamento": false}, {"id": 30, "categoria": "plataforma", "codigo": "CT34900002", "cor": "Branco/Ouro Claro", "numeracao": 36, "quantidade": 3, "foto": "", "fechamento": false}];
 
@@ -1193,6 +1181,7 @@ const OVERLAY_CLOSERS = {
   overlay: hideForm,
   weekOverlay: () => weekOverlay.classList.remove('show'),
   stockOverlay: () => stockOverlay.classList.remove('show'),
+  settingsOverlay: () => settingsOverlay.classList.remove('show'),
   lightbox: () => lightbox.classList.remove('show'),
   confirmOverlay: () => {
     confirmOverlay.classList.remove('show');
@@ -1895,6 +1884,14 @@ document.getElementById('stockBtn').addEventListener('click', ()=>{
 document.getElementById('stockCloseBtn').addEventListener('click', ()=> closeOverlayHistory('stockOverlay'));
 stockOverlay.addEventListener('click', (e)=>{ if(e.target === stockOverlay) closeOverlayHistory('stockOverlay'); });
 
+const settingsOverlay = document.getElementById('settingsOverlay');
+document.getElementById('settingsBtn').addEventListener('click', ()=>{
+  settingsOverlay.classList.add('show');
+  openOverlayHistory('settingsOverlay');
+});
+document.getElementById('settingsCloseBtn').addEventListener('click', ()=> closeOverlayHistory('settingsOverlay'));
+settingsOverlay.addEventListener('click', (e)=>{ if(e.target === settingsOverlay) closeOverlayHistory('settingsOverlay'); });
+
 document.getElementById('stockAddNewBtn').addEventListener('click', ()=>{
   switchOverlay('stockOverlay', ()=>{
     openForm(null, { categoria: stockCat === 'todos' ? 'basquete' : stockCat, codigo:'', cor:'', foto:'', fechamento:false, fromStock:true });
@@ -2175,6 +2172,7 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   a.href = url; a.download = 'fechamento.json'; a.click();
   URL.revokeObjectURL(url);
   toast('Arquivo exportado (lista + estoque).');
+  closeOverlayHistory('settingsOverlay');
 });
 
 document.getElementById('importBtn').addEventListener('click', ()=> document.getElementById('importFile').click());
@@ -2237,6 +2235,7 @@ document.getElementById('importFile').addEventListener('change', (e)=>{
         }
         render();
         toast(newCatalog ? 'Lista e estoque importados com sucesso.' : 'Lista importada com sucesso.');
+        closeOverlayHistory('settingsOverlay');
       };
 
       if(CLOUD_MODE){
