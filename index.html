@@ -251,7 +251,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .fab:active{ transform: scale(.94);}
 
 .overlay{
-  position:fixed; top:0; left:0; right:0; height:100vh; background: rgba(0,0,0,.65);
+  position:fixed; top:0; left:0; right:0; height:100vh; height:100dvh; background: rgba(0,0,0,.65);
   display:none; align-items:flex-end; justify-content:center; z-index:50;
 }
 .overlay.show{ display:flex;}
@@ -314,6 +314,13 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .stock-row .info .cod, .stock-row .info .c{ white-space:normal; overflow-wrap:anywhere; }
 .stock-row .stock-actions .mini-btn{ flex:0 0 34px; width:34px; padding:8px 0; }
 .photo-input.big img{ max-height:200px; }
+.stock-sheet{
+  max-height:88vh; max-height:88dvh; overflow:hidden;
+  display:flex; flex-direction:column;
+  padding-bottom: calc(22px + env(safe-area-inset-bottom));
+}
+.stock-sheet > *{ flex-shrink:0; }
+.stock-sheet > #stockList{ flex:1 1 auto; flex-shrink:1; min-height:120px; }
 .cat-choice button{
   flex:1; padding:11px 6px; border-radius:9px; border:1.5px solid var(--line);
   background: var(--card); font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;
@@ -597,7 +604,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 </div>
 
 <div class="overlay" id="stockOverlay">
-  <div class="sheet" style="max-height:88vh;">
+  <div class="sheet stock-sheet">
     <div class="sheet-handle"></div>
     <div class="sheet-tabs">
       <button type="button" data-tab="stock" class="active">📦 Estoque</button>
@@ -612,7 +619,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
     <div class="field catalog-wrap">
       <input type="text" id="stockSearch" autocomplete="off" placeholder="Buscar por código ou cor...">
     </div>
-    <div id="stockList" style="margin-top:10px; max-height:52vh; overflow-y:auto; border:1.5px solid var(--line); border-radius:10px;"></div>
+    <div id="stockList" style="margin-top:10px; overflow-y:auto; border:1.5px solid var(--line); border-radius:10px;"></div>
     <div class="sheet-actions" style="margin-top:14px;">
       <button type="button" class="btn btn-secondary" id="stockCloseBtn">Fechar</button>
       <button type="button" class="btn btn-primary" id="stockAddNewBtn">+ Novo no estoque</button>
@@ -2169,7 +2176,7 @@ overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeForm(); }
 if(window.visualViewport){
   const vv = window.visualViewport;
   const fixOverlaySize = () => {
-    [overlay, document.getElementById('catalogOverlay')].forEach(o => {
+    document.querySelectorAll('.overlay').forEach(o => {
       o.style.height = vv.height + 'px';
       o.style.top = vv.offsetTop + 'px';
     });
