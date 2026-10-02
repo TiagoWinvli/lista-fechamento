@@ -10,7 +10,7 @@
 // cache antigo e recarregar a página sozinho — sem precisar limpar cache
 // manualmente no celular. Se você esquecer de mudar esse número, o
 // navegador pode continuar servindo a versão antiga do app.
-const CACHE_VERSION = 'v5';
+const CACHE_VERSION = 'v6';
 const CACHE_NAME = `fechamento-calcados-${CACHE_VERSION}`;
 
 // Arquivos essenciais pra o app abrir (o "esqueleto" do app).

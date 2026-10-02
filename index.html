@@ -2160,7 +2160,7 @@ stockList.addEventListener('click', (e)=>{
   }
 });
 
-document.getElementById('fabAdd').addEventListener('click', ()=>{ newFormPreserved = false; openForm(null); });
+document.getElementById('fabAdd').addEventListener('click', ()=>{ newFormPreserved = false; showStockOverlay(); });
 document.getElementById('cancelBtn').addEventListener('click', closeForm);
 overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeForm(); });
 
