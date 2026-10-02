@@ -298,7 +298,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .catalog-item:last-child{ border-bottom:none; }
 .catalog-item:hover, .catalog-item:active{ background: var(--paper-2); }
 .catalog-item .thumb{
-  width:38px; height:38px; border-radius:7px; background: var(--paper-2); flex:0 0 38px;
+  width:52px; height:52px; border-radius:8px; background: var(--paper-2); flex:0 0 52px;
   display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:18px;
 }
 .catalog-item .thumb img{ width:100%; height:100%; object-fit:cover; }
@@ -309,7 +309,11 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 .catalog-item.stock-row{ cursor:default; }
 .catalog-item.stock-row:hover, .catalog-item.stock-row:active{ background: transparent; }
 .stock-row .stock-actions{ display:flex; gap:6px; flex-shrink:0; }
-.stock-row .stock-actions .mini-btn{ flex:none; padding:8px 10px; }
+.stock-row{ --stock-thumb: clamp(72px, 22vw, 96px); }
+.stock-row .thumb{ width:var(--stock-thumb); height:var(--stock-thumb); flex:0 0 var(--stock-thumb); border-radius:10px; font-size:30px; cursor:zoom-in; }
+.stock-row .info .cod, .stock-row .info .c{ white-space:normal; overflow-wrap:anywhere; }
+.stock-row .stock-actions .mini-btn{ flex:0 0 34px; width:34px; padding:8px 0; }
+.photo-input.big img{ max-height:200px; }
 .cat-choice button{
   flex:1; padding:11px 6px; border-radius:9px; border:1.5px solid var(--line);
   background: var(--card); font-family:'Space Grotesk',sans-serif; font-size:14px; font-weight:600;
@@ -401,6 +405,19 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   color: var(--ink-soft);
 }
 .mini-btn.icon-btn { flex: 0 0 40px; display: flex; align-items: center; justify-content: center; font-size: 17px; }
+.search-row{ display:flex; gap:8px; align-items:stretch; margin-top:12px; }
+.search-row .searchbar{ margin-top:0; flex:1; min-width:0; }
+.search-row .mini-btn.icon-btn{ flex:0 0 46px; width:46px; padding:0; border-radius:10px; font-size:19px; }
+.sheet-tabs{
+  display:flex; gap:4px; padding:4px; margin-bottom:14px;
+  background: var(--card); border:1.5px solid var(--line); border-radius:12px;
+}
+.sheet-tabs button{
+  flex:1; border:none; background:transparent; border-radius:9px; padding:11px 6px;
+  font-family:'Space Grotesk',sans-serif; font-size:14.5px; font-weight:600;
+  color: var(--ink-soft); cursor:pointer;
+}
+.sheet-tabs button.active{ background: var(--total-bg); color: var(--total-text); font-weight:700; }
 .mini-btn:hover{ border-color: var(--ink); color: var(--ink);}
 
 #toast{
@@ -451,13 +468,12 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
     </div>
     <div class="count-pill" id="countPill">0 itens</div>
   </div>
+  <div class="search-row">
   <div class="searchbar">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" id="searchInput" placeholder="Buscar por código, cor ou comentário...">
   </div>
-  <div class="topbar-actions">
-    <button class="mini-btn" id="stockBtn">📦 Estoque</button>
-    <button class="mini-btn icon-btn" id="settingsBtn" title="Configurações">⚙</button>
+    <button class="mini-btn icon-btn" id="settingsBtn" title="Configurações" aria-label="Configurações">⚙</button>
     <input type="file" id="importFile" accept=".json" style="display:none">
   </div>
   <div class="week-bar-wrap">
@@ -470,7 +486,7 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
   <div class="grid" id="grid"></div>
 </main>
 
-<button class="fab" id="fabAdd" aria-label="Adicionar sapato">+</button>
+<button class="fab" id="fabAdd" aria-label="Adicionar sapato ou ver estoque">+</button>
 
 <nav class="tabs">
   <button data-cat="todos" class="active">Todos</button>
@@ -482,6 +498,10 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 <div class="overlay" id="overlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
+    <div class="sheet-tabs" id="formTabs">
+      <button type="button" data-tab="stock">📦 Estoque</button>
+      <button type="button" data-tab="new" class="active">+ Novo sapato</button>
+    </div>
     <h2 id="formTitle">Adicionar sapato</h2>
     <form id="itemForm">
       <input type="hidden" id="editId">
@@ -579,7 +599,10 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
 <div class="overlay" id="stockOverlay">
   <div class="sheet" style="max-height:88vh;">
     <div class="sheet-handle"></div>
-    <h2>📦 Estoque cadastrado</h2>
+    <div class="sheet-tabs">
+      <button type="button" data-tab="stock" class="active">📦 Estoque</button>
+      <button type="button" data-tab="new">+ Novo sapato</button>
+    </div>
     <div class="cat-choice compact" id="stockCatFilter" style="margin-bottom:10px;">
       <button type="button" class="sel" data-cat="todos">Todos</button>
       <button type="button" data-cat="basquete">🏀 Basq.</button>
@@ -594,6 +617,43 @@ main{ padding: 16px 10px 20px; max-width: 1100px; margin: 0 auto; overflow-x:hid
       <button type="button" class="btn btn-secondary" id="stockCloseBtn">Fechar</button>
       <button type="button" class="btn btn-primary" id="stockAddNewBtn">+ Novo no estoque</button>
     </div>
+  </div>
+</div>
+
+<div class="overlay" id="catalogOverlay">
+  <div class="sheet">
+    <div class="sheet-handle"></div>
+    <h2 id="catalogFormTitle">Novo no estoque</h2>
+    <form id="catalogForm">
+      <div class="field">
+        <label>Categoria</label>
+        <div class="cat-choice" id="catalogCatChoice">
+          <button type="button" data-cat="basquete">🏀 Basquete</button>
+          <button type="button" data-cat="bota">👢 Bota</button>
+          <button type="button" data-cat="plataforma">⬆ Plataforma</button>
+        </div>
+      </div>
+      <div class="field">
+        <label>Foto</label>
+        <label class="photo-input big">
+          <img id="catalogPhotoPreview" style="display:none;">
+          <span id="catalogPhotoText">Toque para escolher uma foto</span>
+          <input type="file" accept="image/*" id="catalogPhotoFile">
+        </label>
+      </div>
+      <div class="field">
+        <label>Código</label>
+        <input type="text" id="cCodigo" placeholder="ex: CT00010007" required>
+      </div>
+      <div class="field">
+        <label>Cor</label>
+        <input type="text" id="cCor" placeholder="ex: Preto/Vermelho">
+      </div>
+      <div class="sheet-actions">
+        <button type="button" class="btn btn-secondary" id="catalogCancelBtn">Cancelar</button>
+        <button type="submit" class="btn btn-primary">Salvar</button>
+      </div>
+    </form>
   </div>
 </div>
 
@@ -922,6 +982,21 @@ function upsertCatalogFromItem(payload, codigo){
   });
 }
 
+// Quando você corrige cor/foto de um sapato na lista, atualiza também o
+// cadastro dele no Estoque (se ele já existir lá).
+function syncCatalogFromItem(payload, codigo){
+  const key = catalogKey(payload.categoria, codigo);
+  const existing = CATALOG.find(c => c.id === key);
+  if(!existing) return;
+  saveCatalogEntry({
+    id: key,
+    categoria: existing.categoria,
+    codigo: existing.codigo,
+    cor: payload.cor || existing.cor,
+    foto: payload.foto || existing.foto
+  });
+}
+
 const CAT_LABEL = { basquete:"Basquete", bota:"Bota", plataforma:"Plataforma", todos:"Todos" };
 const CAT_ORDER_INDEX = { basquete:0, bota:1, plataforma:2 };
 
@@ -1181,6 +1256,7 @@ const OVERLAY_CLOSERS = {
   overlay: hideForm,
   weekOverlay: () => weekOverlay.classList.remove('show'),
   stockOverlay: () => stockOverlay.classList.remove('show'),
+  catalogOverlay: () => catalogOverlay.classList.remove('show'),
   settingsOverlay: () => settingsOverlay.classList.remove('show'),
   lightbox: () => lightbox.classList.remove('show'),
   confirmOverlay: () => {
@@ -1190,10 +1266,17 @@ const OVERLAY_CLOSERS = {
 };
 
 let overlayStack = [];
+let replaceNextPush = false;   // true durante uma troca de janela (abas): troca a entrada do histórico em vez de empilhar
+let newFormPreserved = false;  // formulário "Novo sapato" escondido ao ir pra aba Estoque (mantém o que foi digitado)
 
 function openOverlayHistory(name){
   overlayStack.push(name);
-  history.pushState({ overlay: name }, '');
+  if(replaceNextPush){
+    replaceNextPush = false;
+    history.replaceState({ overlay: name }, '');
+  } else {
+    history.pushState({ overlay: name }, '');
+  }
 }
 
 function closeOverlayHistory(name){
@@ -1209,12 +1292,13 @@ function closeOverlayHistory(name){
 
 // Troca uma janela por outra sem empilhar um passo extra no histórico
 // (ex: fechar o Estoque e já abrir o formulário de cadastro por cima).
-function switchOverlay(fromName, openFn){
-  if(overlayStack.length && overlayStack[overlayStack.length - 1] === fromName){
-    overlayStack.pop();
-  }
-  if(OVERLAY_CLOSERS[fromName]) OVERLAY_CLOSERS[fromName]();
-  openFn();
+function switchOverlay(fromName, openFn, closeFn){
+  const wasTop = overlayStack.length && overlayStack[overlayStack.length - 1] === fromName;
+  if(wasTop) overlayStack.pop();
+  const closer = closeFn || OVERLAY_CLOSERS[fromName];
+  if(closer) closer();
+  replaceNextPush = !!wasTop;
+  try{ openFn(); } finally { replaceNextPush = false; }
 }
 
 window.addEventListener('popstate', ()=>{
@@ -1648,6 +1732,9 @@ function openGroupEditForm(key){
   const first = rows[0];
 
   hideToast();
+  newFormPreserved = false;
+  document.getElementById('formTabs').style.display = 'none';
+  document.getElementById('formTitle').style.display = '';
   editingId = null;
   editingGroupKey = key;
   photoDataUrl = "";
@@ -1689,6 +1776,10 @@ function openGroupEditForm(key){
 
 function openForm(id, prefill){
   hideToast();
+  newFormPreserved = false;
+  const showTabs = !id && !prefill;
+  document.getElementById('formTabs').style.display = showTabs ? '' : 'none';
+  document.getElementById('formTitle').style.display = showTabs ? 'none' : '';
   editingId = id || null;
   editingGroupKey = null;
   photoDataUrl = "";
@@ -1757,6 +1848,7 @@ function openForm(id, prefill){
 // pelo botão voltar do celular quanto pelos botões Cancelar/tocar fora
 // (através de closeForm/closeOverlayHistory, ver mais abaixo).
 function hideForm(){
+  newFormPreserved = false;
   overlay.classList.remove('show');
   editingId = null;
   editingGroupKey = null;
@@ -1855,6 +1947,7 @@ function renderStockList(){
       </div>
       <div class="stock-actions">
         <button type="button" class="mini-btn icon-btn" data-addstock="${g.id}" title="Adicionar à lista">➕</button>
+        <button type="button" class="mini-btn icon-btn" data-editstock="${g.id}" title="Editar cadastro">✎</button>
         <button type="button" class="mini-btn icon-btn" data-delstock="${g.id}" title="Excluir do estoque">🗑</button>
       </div>
     `;
@@ -1873,13 +1966,34 @@ stockCatFilter.addEventListener('click', (e)=>{
   renderStockList();
 });
 
-document.getElementById('stockBtn').addEventListener('click', ()=>{
+function showStockOverlay(){
   stockSearch.value = '';
   stockCat = 'todos';
   [...stockCatFilter.children].forEach(b=> b.classList.toggle('sel', b.dataset.cat==='todos'));
   renderStockList();
   stockOverlay.classList.add('show');
   openOverlayHistory('stockOverlay');
+}
+
+// Abas "Estoque" | "Novo sapato" (a janela do botão +). Ao ir do formulário
+// para o Estoque, o que já foi digitado fica guardado e volta ao reabrir a aba.
+document.querySelectorAll('.sheet-tabs').forEach(bar => {
+  bar.addEventListener('click', (e)=>{
+    const btn = e.target.closest('button[data-tab]');
+    if(!btn || btn.classList.contains('active')) return;
+    if(btn.dataset.tab === 'stock'){
+      switchOverlay('overlay', ()=>{ newFormPreserved = true; showStockOverlay(); }, ()=> overlay.classList.remove('show'));
+    } else {
+      switchOverlay('stockOverlay', ()=>{
+        if(newFormPreserved){
+          overlay.classList.add('show');
+          openOverlayHistory('overlay');
+        } else {
+          openForm(null);
+        }
+      });
+    }
+  });
 });
 document.getElementById('stockCloseBtn').addEventListener('click', ()=> closeOverlayHistory('stockOverlay'));
 stockOverlay.addEventListener('click', (e)=>{ if(e.target === stockOverlay) closeOverlayHistory('stockOverlay'); });
@@ -1892,14 +2006,135 @@ document.getElementById('settingsBtn').addEventListener('click', ()=>{
 document.getElementById('settingsCloseBtn').addEventListener('click', ()=> closeOverlayHistory('settingsOverlay'));
 settingsOverlay.addEventListener('click', (e)=>{ if(e.target === settingsOverlay) closeOverlayHistory('settingsOverlay'); });
 
-document.getElementById('stockAddNewBtn').addEventListener('click', ()=>{
-  switchOverlay('stockOverlay', ()=>{
-    openForm(null, { categoria: stockCat === 'todos' ? 'basquete' : stockCat, codigo:'', cor:'', foto:'', fechamento:false, fromStock:true });
-    document.getElementById('formTitle').textContent = 'Novo cadastro no estoque';
-  });
+// ============================================================
+// CADASTRO DO ESTOQUE — cria ou edita um sapato só no Estoque, sem
+// colocar nada na lista de compras. Abre por cima da janela do Estoque.
+// Ao editar, cor/foto (e código/categoria, se mudarem) também são
+// atualizados nos itens da lista que usam esse mesmo sapato.
+// ============================================================
+const catalogOverlay = document.getElementById('catalogOverlay');
+const catalogForm = document.getElementById('catalogForm');
+const catalogCatChoice = document.getElementById('catalogCatChoice');
+let catalogEditingId = null;
+let catalogSelectedCat = null;
+let catalogPhotoData = '';
+
+function setCatalogPhotoPreview(src){
+  const prev = document.getElementById('catalogPhotoPreview');
+  if(src){
+    prev.src = src;
+    prev.style.display = 'block';
+    document.getElementById('catalogPhotoText').textContent = 'Toque para trocar a foto';
+  } else {
+    prev.removeAttribute('src');
+    prev.style.display = 'none';
+    document.getElementById('catalogPhotoText').textContent = 'Toque para escolher uma foto';
+  }
+}
+
+function openCatalogForm(id){
+  const entry = id ? CATALOG.find(c => c.id === id) : null;
+  if(id && !entry) return;
+  hideToast();
+  catalogForm.reset();
+  catalogEditingId = entry ? entry.id : null;
+  catalogSelectedCat = entry ? entry.categoria : (stockCat !== 'todos' ? stockCat : null);
+  catalogPhotoData = entry ? (entry.foto || '') : '';
+  document.getElementById('catalogFormTitle').textContent = entry ? `Editar cadastro — ${entry.codigo}` : 'Novo no estoque';
+  document.getElementById('cCodigo').value = entry ? (entry.codigo || '') : '';
+  document.getElementById('cCor').value = entry ? (entry.cor || '') : '';
+  setCatalogPhotoPreview(catalogPhotoData);
+  [...catalogCatChoice.children].forEach(b => b.classList.toggle('sel', b.dataset.cat === catalogSelectedCat));
+  catalogOverlay.classList.add('show');
+  openOverlayHistory('catalogOverlay');
+}
+
+catalogCatChoice.addEventListener('click', (e)=>{
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  catalogSelectedCat = btn.dataset.cat;
+  [...catalogCatChoice.children].forEach(b => b.classList.toggle('sel', b === btn));
 });
 
+document.getElementById('catalogPhotoFile').addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  document.getElementById('catalogPhotoText').textContent = 'Otimizando foto...';
+  compressImage(file)
+    .then(dataUrl => { catalogPhotoData = dataUrl; setCatalogPhotoPreview(dataUrl); })
+    .catch(err => {
+      toast('Erro ao processar a foto: ' + err.message);
+      setCatalogPhotoPreview(catalogPhotoData);
+    });
+});
+
+// Leva a edição do estoque para os itens da lista que usam esse sapato.
+function propagateCatalogEdit(oldEntry, entry){
+  const oldKey = catalogKey(oldEntry.categoria, oldEntry.codigo);
+  const affected = DATA.filter(d => catalogKey(d.categoria, d.codigo) === oldKey);
+  if(!affected.length) return;
+  affected.forEach(item => {
+    const oldGroup = groupKey(item);
+    item.categoria = entry.categoria;
+    item.codigo = entry.codigo;
+    item.cor = entry.cor;
+    item.foto = entry.foto || item.foto;
+    const newGroup = groupKey(item);
+    if(oldGroup !== newGroup){
+      const i = CARD_ORDER.indexOf(oldGroup);
+      if(i !== -1) CARD_ORDER[i] = newGroup;
+    }
+    saveToDB(item);
+  });
+  CARD_ORDER = CARD_ORDER.filter((k, i) => CARD_ORDER.indexOf(k) === i);
+  saveCardOrder();
+}
+
+catalogForm.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  const codigo = document.getElementById('cCodigo').value.trim();
+  const cor = document.getElementById('cCor').value.trim();
+  if(!catalogSelectedCat){ toast('Selecione a categoria: Basquete, Bota ou Plataforma.'); return; }
+  if(!codigo){ toast('Preencha o Código.'); return; }
+  if(!CLOUD_MODE && !db){ toast('Ainda carregando os dados, aguarde um instante e tente de novo.'); return; }
+
+  const newKey = catalogKey(catalogSelectedCat, codigo);
+  if(newKey !== catalogEditingId && CATALOG.some(c => c.id === newKey)){
+    toast('Esse código já está cadastrado no estoque nessa categoria.');
+    return;
+  }
+
+  const oldEntry = catalogEditingId ? CATALOG.find(c => c.id === catalogEditingId) : null;
+  const entry = { id:newKey, categoria:catalogSelectedCat, codigo, cor, foto:catalogPhotoData };
+
+  if(oldEntry && oldEntry.id !== newKey) deleteCatalogEntry(oldEntry.id);
+  saveCatalogEntry(entry);
+  if(oldEntry) propagateCatalogEdit(oldEntry, entry);
+
+  toast(oldEntry ? 'Cadastro atualizado.' : 'Sapato cadastrado no estoque.');
+  closeOverlayHistory('catalogOverlay');
+  renderStockList();
+  render();
+});
+
+document.getElementById('catalogCancelBtn').addEventListener('click', ()=> closeOverlayHistory('catalogOverlay'));
+catalogOverlay.addEventListener('click', (e)=>{ if(e.target === catalogOverlay) closeOverlayHistory('catalogOverlay'); });
+
+document.getElementById('stockAddNewBtn').addEventListener('click', ()=> openCatalogForm(null));
+
 stockList.addEventListener('click', (e)=>{
+  const editBtn = e.target.closest('[data-editstock]');
+  if(editBtn){ openCatalogForm(editBtn.dataset.editstock); return; }
+
+  // Toque na foto do estoque abre ela grande.
+  const thumbImg = e.target.closest('.thumb img');
+  if(thumbImg){
+    document.getElementById('lightboxImg').src = thumbImg.src;
+    lightbox.classList.add('show');
+    openOverlayHistory('lightbox');
+    return;
+  }
+
   const addBtn = e.target.closest('[data-addstock]');
   if(addBtn){
     const g = CATALOG.find(c=>c.id===addBtn.dataset.addstock);
@@ -1925,7 +2160,7 @@ stockList.addEventListener('click', (e)=>{
   }
 });
 
-document.getElementById('fabAdd').addEventListener('click', ()=> openForm(null));
+document.getElementById('fabAdd').addEventListener('click', ()=>{ newFormPreserved = false; openForm(null); });
 document.getElementById('cancelBtn').addEventListener('click', closeForm);
 overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeForm(); });
 
@@ -1934,8 +2169,10 @@ overlay.addEventListener('click', (e)=>{ if(e.target === overlay) closeForm(); }
 if(window.visualViewport){
   const vv = window.visualViewport;
   const fixOverlaySize = () => {
-    overlay.style.height = vv.height + 'px';
-    overlay.style.top = vv.offsetTop + 'px';
+    [overlay, document.getElementById('catalogOverlay')].forEach(o => {
+      o.style.height = vv.height + 'px';
+      o.style.top = vv.offsetTop + 'px';
+    });
   };
   vv.addEventListener('resize', fixOverlaySize);
   vv.addEventListener('scroll', fixOverlaySize);
@@ -2067,6 +2304,7 @@ itemForm.addEventListener('submit', (e)=>{
         saveToDB(item);
       });
 
+      syncCatalogFromItem(basePayload, codigo);
       toast('Sapato atualizado.');
     } else if(editingGroupKey){
       // Edição do card inteiro: compara a lista nova de numerações com a
@@ -2101,6 +2339,7 @@ itemForm.addEventListener('submit', (e)=>{
         saveToDB(item);
       });
 
+      syncCatalogFromItem(basePayload, codigo);
       toast('Sapato atualizado.');
     } else {
       // Cadastro novo: cada numeração preenchida vira um item — ou, se já
