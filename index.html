@@ -2179,11 +2179,26 @@ if(window.visualViewport){
     document.querySelectorAll('.overlay').forEach(o => {
       o.style.height = vv.height + 'px';
       o.style.top = vv.offsetTop + 'px';
+      // O card (.sheet) de dentro usa max-height:88dvh no CSS, mas em
+      // vários navegadores/WebViews essa unidade não encolhe junto com o
+      // teclado. Por isso, aqui a gente calcula o tamanho certo em pixels,
+      // a partir da área realmente visível (vv.height), e aplica direto —
+      // isso garante que o card nunca fique maior que a tela, evitando que
+      // o topo (abas, filtros, busca) seja cortado pra fora quando o
+      // teclado abre.
+      const sheetEl = o.querySelector('.sheet');
+      if(sheetEl) sheetEl.style.maxHeight = Math.round(vv.height * 0.88) + 'px';
     });
   };
   vv.addEventListener('resize', fixOverlaySize);
   vv.addEventListener('scroll', fixOverlaySize);
   fixOverlaySize();
+  // Reforço: ao focar o campo de busca do estoque, reaplica o ajuste logo
+  // em seguida (o teclado leva um instante pra abrir, então espera um
+  // pouco antes de recalcular).
+  document.getElementById('stockSearch')?.addEventListener('focus', ()=>{
+    setTimeout(fixOverlaySize, 250);
+  });
 }
 
 // Quando um campo ganha foco (teclado abre), garante que os botões de
